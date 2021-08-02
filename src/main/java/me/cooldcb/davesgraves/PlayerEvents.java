@@ -41,7 +41,6 @@ public class PlayerEvents implements Listener {
         String graveID = containerData[1];
         event.setCancelled(true);
         Player player = event.getPlayer();
-
         if (!DavesGraves.configManager.canAllPlayersLoot()) {
             UUID playerUUID = player.getUniqueId();
             if (!playerUUID.equals(graveOwnerUUID)) {
@@ -49,8 +48,9 @@ public class PlayerEvents implements Listener {
                 return;
             }
         }
-
-        DavesGraves.dataManager.breakGrave(graveOwnerUUID, Integer.parseInt(graveID), player);
+        DavesGraves.dataManager.getGrave(graveOwnerUUID, Integer.parseInt(graveID), (grave) -> {
+            DavesGraves.dataManager.breakGrave(grave, player);
+        });
     }
 
     private void createGrave(Player player, List<ItemStack> drops) {
@@ -58,11 +58,9 @@ public class PlayerEvents implements Listener {
         ItemStack[] dropArr = new ItemStack[drops.size()];
         drops.toArray(dropArr);
         String base64Data = ItemSerialization.itemStackArrayToBase64(dropArr);
-
         UUID playerUUID = player.getUniqueId();
         Location pLoc = player.getLocation();
         if (pLoc.getY() <= 6) pLoc.setY(7);
-
         int randomDirection = (int) (Math.random() * 4) * 90;
         ArmorStand graveAS = pLoc.getWorld().spawn(pLoc, ArmorStand.class, (armorStand -> {
             try {

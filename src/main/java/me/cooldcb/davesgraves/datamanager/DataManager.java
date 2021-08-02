@@ -43,19 +43,27 @@ public class DataManager {
             UUID playerUUID = grave.getPlayerUUID();
             if (getGraveCount(playerUUID) >= DavesGraves.configManager.getMaxGraves()) {
                 int lowestID = getLowestGraveID(playerUUID);
-                if (lowestID != -1) breakGrave(playerUUID, lowestID);
+                if (lowestID != -1) breakGrave(grave);
             }
             storage.saveGrave(grave);
         });
     }
 
-    public void breakGrave(UUID playerUUID, int graveID) {
-        Storage.SERVICE.submit(() -> storage.deleteGrave(playerUUID, graveID, null));
+    public void breakGrave(Grave grave) {
+        Storage.SERVICE.submit(() -> storage.deleteGrave(grave.getPlayerUUID(), grave.getGraveID(), null));
     }
 
-    public void breakGrave(UUID playerUUID, int graveID, Player collector) {
-        Storage.SERVICE.submit(() -> storage.deleteGrave(playerUUID, graveID, collector));
+    public void breakGrave(Grave grave, Player collector) {
+        Storage.SERVICE.submit(() -> storage.deleteGrave(grave.getPlayerUUID(), grave.getGraveID(), collector));
     }
+
+//    public void breakGrave(UUID playerUUID, int graveID) {
+//        Storage.SERVICE.submit(() -> storage.deleteGrave(playerUUID, graveID, null));
+//    }
+
+//    public void breakGrave(UUID playerUUID, int graveID, Player collector) {
+//        Storage.SERVICE.submit(() -> storage.deleteGrave(playerUUID, graveID, collector));
+//    }
 
     public int getNextGraveID(UUID playerUUID) {
         return storage.getNextGraveID(playerUUID);
