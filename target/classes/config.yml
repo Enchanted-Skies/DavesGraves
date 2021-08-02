@@ -1,0 +1,23 @@
+# If false only the player who's loot it is can collect the loot.
+all-loot: true
+
+# The way that items get returned to players. Directly to inventory = 0, Drop items on location = 1
+item-return-mode: 0
+
+# The max graves per player, set to -1 to make infinite
+max-graves: 5
+
+# The cost for a player to return to their death point, set to -1 to disable
+price-to-return: -1
+
+# Time in seconds for how long graves will stay alive for, 0 lasts forever
+time: 10800
+
+# The skull texture of the grave
+grave-texture: ewogICJ0aW1lc3RhbXAiIDogMTYyNjk1OTYyNTExOCwKICAicHJvZmlsZUlkIiA6ICI3M2Q0ZTA2ODNhNmQ0YzhiOGY4NTMzMjM1NDY5NTVjNCIsCiAgInByb2ZpbGVOYW1lIiA6ICJNSEZfQ2hlc3QiLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNzU4MzA1ZTUyN2ZjZjA4NTI1ZmRmZjA3ZTRjZDZlNzk3NzRhY2RkNDI2Y2MyNzMyN2Q0NWRmOGE1ZmY4NjQxOSIKICAgIH0KICB9Cn0=
+
+# Worlds that graves will spawn in
+worlds:
+  - world
+  - world_nether
+  - world_the_end

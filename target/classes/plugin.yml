@@ -1,0 +1,8 @@
+name: DavesGraves
+version: 0.9-SNAPSHOT
+main: me.cooldcb.davesgraves.DavesGraves
+api-version: 1.13
+commands:
+  graves:
+    description: Graves umbrella command
+    usage: /graves
