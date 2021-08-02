@@ -59,7 +59,7 @@ public class Grave {
         long diffSeconds = currSeconds - epochSeconds;
         long secondsLeft = DavesGraves.configManager.getGraveLifetime() - diffSeconds;
         if (secondsLeft < 0) {
-            DavesGraves.dataManager.breakGrave(this);
+            Bukkit.getScheduler().runTaskLater(DavesGraves.getInstance(), () -> DavesGraves.dataManager.breakGrave(this), 1L);
             return;
         }
         Bukkit.getScheduler().runTaskLater(DavesGraves.getInstance(), () -> DavesGraves.dataManager.breakGrave(this), secondsLeft * 20L);

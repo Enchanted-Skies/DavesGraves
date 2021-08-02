@@ -38,6 +38,10 @@ public class DataManager {
         });
     }
 
+    public void loadGraves() {
+        storage.loadGraves();
+    }
+
     public void saveGrave(Grave grave) {
         Storage.SERVICE.submit(() -> {
             UUID playerUUID = grave.getPlayerUUID();
@@ -56,14 +60,6 @@ public class DataManager {
     public void breakGrave(Grave grave, Player collector) {
         Storage.SERVICE.submit(() -> storage.deleteGrave(grave.getPlayerUUID(), grave.getGraveID(), collector));
     }
-
-//    public void breakGrave(UUID playerUUID, int graveID) {
-//        Storage.SERVICE.submit(() -> storage.deleteGrave(playerUUID, graveID, null));
-//    }
-
-//    public void breakGrave(UUID playerUUID, int graveID, Player collector) {
-//        Storage.SERVICE.submit(() -> storage.deleteGrave(playerUUID, graveID, collector));
-//    }
 
     public int getNextGraveID(UUID playerUUID) {
         return storage.getNextGraveID(playerUUID);

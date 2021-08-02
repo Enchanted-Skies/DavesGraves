@@ -9,6 +9,7 @@ import java.util.concurrent.Executors;
 
 public interface Storage {
     ExecutorService SERVICE = Executors.newSingleThreadExecutor();
+    void loadGraves();
     void saveGrave(Grave grave);
     void deleteGrave(UUID playerUUID, int graveID, Player player);
 

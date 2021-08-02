@@ -27,6 +27,17 @@ public class YmlStorage implements Storage {
     private final ReentrantLock fileLock = new ReentrantLock();
 
     @Override
+    public void loadGraves() {
+        for (String playerUUIDStr : config.getKeys(false)) {
+            ConfigurationSection playerSection = config.getConfigurationSection(playerUUIDStr);
+            UUID playerUUID = UUID.fromString(playerUUIDStr);
+            for (String graveIDStr : playerSection.getKeys(false)) {
+                new Grave(playerUUID, Integer.parseInt(graveIDStr));
+            }
+        }
+    }
+
+    @Override
     public void saveGrave(Grave grave) {
         fileLock.lock();
         ConfigurationSection playerSection = config.getConfigurationSection(grave.getPlayerUUID().toString());

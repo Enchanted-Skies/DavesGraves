@@ -29,6 +29,8 @@ public final class DavesGraves extends JavaPlugin implements Listener {
             registerEvents(listeners);
 
             getCommand("graves").setExecutor(new GravesCmd());
+
+            dataManager.loadGraves();
         });
     }
 
