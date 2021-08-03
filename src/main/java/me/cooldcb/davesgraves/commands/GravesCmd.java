@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class GravesCmd implements CommandExecutor, TabCompleter {
-    DavesGraves plugin = DavesGraves.getInstance();
+    private final DavesGraves plugin = DavesGraves.getInstance();
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
