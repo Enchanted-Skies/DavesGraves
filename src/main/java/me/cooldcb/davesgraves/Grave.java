@@ -58,7 +58,7 @@ public class Grave {
         long currSeconds = LocalDateTime.now().toEpochSecond(ZoneOffset.UTC);
         long diffSeconds = currSeconds - epochSeconds;
         long secondsLeft = DavesGraves.configManager.getGraveLifetime() - diffSeconds;
-        if (secondsLeft < 0) {
+        if (secondsLeft <= 0) {
             Bukkit.getScheduler().runTaskLater(DavesGraves.getInstance(), () -> DavesGraves.dataManager.breakGrave(this), 1L);
             return;
         }
