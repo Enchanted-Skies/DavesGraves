@@ -62,6 +62,6 @@ public class Grave {
             Bukkit.getScheduler().runTaskLater(DavesGraves.getInstance(), () -> DavesGraves.dataManager.breakGrave(this), 1L);
             return;
         }
-        Bukkit.getScheduler().runTaskLater(DavesGraves.getInstance(), () -> DavesGraves.dataManager.breakGrave(this), secondsLeft * 20L);
+        Bukkit.getScheduler().runTaskLater(DavesGraves.getInstance(), () -> DavesGraves.dataManager.breakGrave(this), (secondsLeft * 20L));
     }
 }

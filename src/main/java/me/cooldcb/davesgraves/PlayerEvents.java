@@ -8,8 +8,10 @@ import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerArmorStandManipulateEvent;
+import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
 
@@ -35,12 +37,26 @@ public class PlayerEvents implements Listener {
         ArmorStand armorStand = event.getRightClicked();
         String graveContainer = armorStand.getPersistentDataContainer().get(graveKey, PersistentDataType.STRING);
         if (graveContainer == null) return;
+        event.setCancelled(true);
         String[] containerData = graveContainer.split("\\|");
+        playerInteractWithGrave(event.getPlayer(), containerData);
+    }
+
+    @EventHandler
+    public void onPlayerDamageEntity(EntityDamageByEntityEvent event) {
+        if (!(event.getEntity() instanceof ArmorStand armorStand)) return;
+        if (!(event.getDamager() instanceof Player player)) return;
+        String graveContainer = armorStand.getPersistentDataContainer().get(graveKey, PersistentDataType.STRING);
+        if (graveContainer == null) return;
+        event.setCancelled(true);
+        String[] containerData = graveContainer.split("\\|");
+        playerInteractWithGrave(player, containerData);
+    }
+
+    private void playerInteractWithGrave(Player player, String[] containerData) {
         String graveOwnerUUIDStr = containerData[0];
         UUID graveOwnerUUID = UUID.fromString(graveOwnerUUIDStr);
         String graveID = containerData[1];
-        event.setCancelled(true);
-        Player player = event.getPlayer();
         if (!DavesGraves.configManager.canAllPlayersLoot()) {
             UUID playerUUID = player.getUniqueId();
             if (!playerUUID.equals(graveOwnerUUID)) {
