@@ -1,34 +1,36 @@
 package me.cooldcb.davesgraves.datamanager;
 
-import com.destroystokyo.paper.profile.PlayerProfile;
-import com.destroystokyo.paper.profile.ProfileProperty;
+import com.mojang.authlib.GameProfile;
+import com.mojang.authlib.properties.Property;
 import me.cooldcb.davesgraves.DavesGraves;
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 public class ConfigManager {
     private final DavesGraves plugin = DavesGraves.getInstance();
     private FileConfiguration config;
-    private final List<String> worldList;
-    private final ItemStack graveHead;
+    private List<String> worldList;
+    private ItemStack graveHead;
 
     public ConfigManager() {
         plugin.saveDefaultConfig();
         reloadConfig();
-        worldList = reloadWorldList();
-        graveHead = getCustomSkull(config.getString("grave-texture"));
+
     }
 
     public void reloadConfig() {
         plugin.reloadConfig();
         config = plugin.getConfig();
+        worldList = reloadWorldList();
+        graveHead = getCustomSkull(config.getString("grave-texture"));
     }
 
     private  List<String> reloadWorldList() {
@@ -59,15 +61,37 @@ public class ConfigManager {
         return worldList.contains(worldName);
     }
 
-    private ItemStack getCustomSkull(String texture) {
+    public ItemStack getCustomSkull(String texture) {
         ItemStack skull = new ItemStack(Material.PLAYER_HEAD);
         SkullMeta skullMeta = (SkullMeta) skull.getItemMeta();
-        PlayerProfile playerProfile = Bukkit.createProfile(UUID.randomUUID());
-        Set<ProfileProperty> profileProperties = playerProfile.getProperties();
-        profileProperties.add(new ProfileProperty("textures", texture));
-        playerProfile.setProperties(profileProperties);
-        skullMeta.setPlayerProfile(playerProfile);
+        try {
+            Method metaSetProfileMethod = skullMeta.getClass().getDeclaredMethod("setProfile", GameProfile.class);
+            metaSetProfileMethod.setAccessible(true);
+            metaSetProfileMethod.invoke(skullMeta, makeProfile(texture));
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ex) {
+            // if in an older API where there is no setProfile method,
+            // we set the profile field directly.
+            try {
+                Field metaProfileField = skullMeta.getClass().getDeclaredField("profile");
+                metaProfileField.setAccessible(true);
+                metaProfileField.set(skullMeta, makeProfile(texture));
+
+            } catch (NoSuchFieldException | IllegalAccessException ex2) {
+                ex2.printStackTrace();
+            }
+        }
         skull.setItemMeta(skullMeta);
         return skull;
+    }
+
+    private GameProfile makeProfile(String b64) {
+        // random uuid based on the b64 string
+        UUID id = new UUID(
+            b64.substring(b64.length() - 20).hashCode(),
+            b64.substring(b64.length() - 10).hashCode()
+        );
+        GameProfile profile = new GameProfile(id, "Player");
+        profile.getProperties().put("textures", new Property("textures", b64));
+        return profile;
     }
 }
