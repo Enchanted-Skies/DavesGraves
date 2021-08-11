@@ -5,12 +5,14 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.ArmorStand;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerArmorStandManipulateEvent;
+import org.bukkit.event.player.PlayerToggleSneakEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
 
@@ -50,6 +52,21 @@ public class PlayerEvents implements Listener {
         event.setCancelled(true);
         String[] containerData = graveContainer.split("\\|");
         playerInteractWithGrave(player, containerData);
+    }
+
+    @EventHandler
+    public void onPlayerCrouch(PlayerToggleSneakEvent event) {
+        Player player = event.getPlayer();
+        if (player.isDead()) return;
+        List<Entity> entities = player.getNearbyEntities(0.25, 0.25, 0.25);
+        for (Entity entity : entities) {
+            if (!(entity instanceof ArmorStand armorStand)) continue;
+            String graveContainer = armorStand.getPersistentDataContainer().get(graveKey, PersistentDataType.STRING);
+            if (graveContainer == null) continue;
+            event.setCancelled(true);
+            String[] containerData = graveContainer.split("\\|");
+            playerInteractWithGrave(player, containerData);
+        }
     }
 
     private void playerInteractWithGrave(Player player, String[] containerData) {
