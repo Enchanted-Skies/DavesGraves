@@ -40,7 +40,11 @@ public class PlayerEvents implements Listener {
         if (graveContainer == null) return;
         event.setCancelled(true);
         String[] containerData = graveContainer.split("\\|");
-        playerInteractWithGrave(event.getPlayer(), containerData);
+        if (containerData[0].equals("null")) {
+            event.getPlayer().sendMessage("§7The Grave rots before your eyes.");
+            armorStand.remove();
+        }
+        playerInteractWithGrave(event.getPlayer(), armorStand, containerData);
     }
 
     @EventHandler
@@ -51,7 +55,11 @@ public class PlayerEvents implements Listener {
         if (graveContainer == null) return;
         event.setCancelled(true);
         String[] containerData = graveContainer.split("\\|");
-        playerInteractWithGrave(player, containerData);
+        if (containerData[0].equals("null")) {
+            event.getDamager().sendMessage("§7The Grave rots before your eyes.");
+            armorStand.remove();
+        }
+        playerInteractWithGrave(player, armorStand, containerData);
     }
 
     @EventHandler
@@ -65,11 +73,15 @@ public class PlayerEvents implements Listener {
             if (graveContainer == null) continue;
             event.setCancelled(true);
             String[] containerData = graveContainer.split("\\|");
-            playerInteractWithGrave(player, containerData);
+            if (containerData[0].equals("null")) {
+                player.sendMessage("§7The Grave rots before your eyes.");
+                armorStand.remove();
+            }
+            playerInteractWithGrave(player, armorStand, containerData);
         }
     }
 
-    private void playerInteractWithGrave(Player player, String[] containerData) {
+    private void playerInteractWithGrave(Player player, Entity entity, String[] containerData) {
         String graveOwnerUUIDStr = containerData[0];
         UUID graveOwnerUUID = UUID.fromString(graveOwnerUUIDStr);
         String graveID = containerData[1];
@@ -80,7 +92,13 @@ public class PlayerEvents implements Listener {
                 return;
             }
         }
-        DavesGraves.dataManager.getGrave(graveOwnerUUID, Integer.parseInt(graveID), (grave) -> DavesGraves.dataManager.breakGrave(grave, player));
+        DavesGraves.dataManager.getGrave(graveOwnerUUID, Integer.parseInt(graveID), (grave) -> {
+            if (grave.isValid()) DavesGraves.dataManager.breakGrave(grave, player);
+            else {
+                player.sendMessage("§7The Grave rots before your eyes.");
+                entity.remove();
+            }
+        });
     }
 
     private void createGrave(Player player, List<ItemStack> drops) {

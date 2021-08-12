@@ -13,11 +13,13 @@ public class Grave {
     private final UUID asUUID;
     private final long epochSeconds;
     private final String base64Data;
+    private boolean isValid = true;
 
     public Grave(UUID playerUUID, int id) {
         this.playerUUID = playerUUID;
         this.id = id;
         this.asUUID = DavesGraves.dataManager.getArmorStandUUID(playerUUID, id);
+        if (asUUID == null) isValid = false;
         this.epochSeconds = DavesGraves.dataManager.getEpochSeconds(playerUUID, id);
         this.base64Data = DavesGraves.dataManager.getContents(playerUUID, id);
         startGraveTimer();
@@ -52,6 +54,10 @@ public class Grave {
 
     public String getBase64Data() {
         return base64Data;
+    }
+
+    public boolean isValid() {
+        return isValid;
     }
 
     private void startGraveTimer() {
