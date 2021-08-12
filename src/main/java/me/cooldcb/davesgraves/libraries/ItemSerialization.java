@@ -18,7 +18,7 @@ public class ItemSerialization {
      *
      * @param items to turn into a Base64 String.
      * @return Base64 string of the items.
-     * @throws IllegalStateException
+     * @throws IllegalStateException - When the itemstacks cannot be saved.
      */
     public static String itemStackArrayToBase64(ItemStack[] items) throws IllegalStateException {
         try {

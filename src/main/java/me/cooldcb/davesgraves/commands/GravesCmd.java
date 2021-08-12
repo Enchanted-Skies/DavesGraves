@@ -2,6 +2,7 @@ package me.cooldcb.davesgraves.commands;
 
 import me.cooldcb.davesgraves.DavesGraves;
 import me.cooldcb.davesgraves.Grave;
+import org.bukkit.ChatColor;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
 import org.bukkit.command.Command;
@@ -41,13 +42,16 @@ public class GravesCmd implements CommandExecutor, TabCompleter {
                 player.sendMessage("§cInsufficient permissions");
                 return true;
             }
+            int tally = 0;
             World world = player.getWorld();
             for (Entity entity :  world.getEntities()) {
                 if (!(entity instanceof ArmorStand armorStand)) continue;
                 String graveContainer = armorStand.getPersistentDataContainer().get(graveKey, PersistentDataType.STRING);
                 if (graveContainer == null) continue;
                 entity.remove();
+                tally++;
             }
+            player.sendMessage(ChatColor.GREEN + "Removed " + tally + (tally == 1 ? " entity!" : " entities!"));
         } else if (args.length == 1 && args[0].equals("break")) {
             if (!player.hasPermission("davesgraves.command.kill")) {
                 player.sendMessage("§cInsufficient permissions");
