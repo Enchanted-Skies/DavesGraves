@@ -33,6 +33,15 @@ public class PlayerEvents implements Listener {
         event.getDrops().clear();
     }
 
+    private boolean isNullContainerData(Player player, String[] containerData, ArmorStand stand) {
+        if (containerData[0].equals("null")) {
+            player.sendMessage("§7The Grave rots before your eyes.");
+            stand.remove();
+            return true;
+        }
+        return false;
+    }
+
     @EventHandler
     public void onArmorStandInteract(PlayerArmorStandManipulateEvent event) {
         ArmorStand armorStand = event.getRightClicked();
@@ -40,9 +49,8 @@ public class PlayerEvents implements Listener {
         if (graveContainer == null) return;
         event.setCancelled(true);
         String[] containerData = graveContainer.split("\\|");
-        if (containerData[0].equals("null")) {
-            event.getPlayer().sendMessage("§7The Grave rots before your eyes.");
-            armorStand.remove();
+        if (isNullContainerData(event.getPlayer(), containerData, armorStand)) {
+            return;
         }
         playerInteractWithGrave(event.getPlayer(), armorStand, containerData);
     }
@@ -55,9 +63,8 @@ public class PlayerEvents implements Listener {
         if (graveContainer == null) return;
         event.setCancelled(true);
         String[] containerData = graveContainer.split("\\|");
-        if (containerData[0].equals("null")) {
-            event.getDamager().sendMessage("§7The Grave rots before your eyes.");
-            armorStand.remove();
+        if (isNullContainerData(player, containerData, armorStand)) {
+            return;
         }
         playerInteractWithGrave(player, armorStand, containerData);
     }
@@ -73,9 +80,8 @@ public class PlayerEvents implements Listener {
             if (graveContainer == null) continue;
             event.setCancelled(true);
             String[] containerData = graveContainer.split("\\|");
-            if (containerData[0].equals("null")) {
-                player.sendMessage("§7The Grave rots before your eyes.");
-                armorStand.remove();
+            if (isNullContainerData(player, containerData, armorStand)) {
+                return;
             }
             playerInteractWithGrave(player, armorStand, containerData);
         }

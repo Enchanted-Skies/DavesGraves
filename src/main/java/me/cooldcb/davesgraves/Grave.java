@@ -36,6 +36,18 @@ public class Grave {
         startGraveTimer();
     }
 
+    private void startGraveTimer() {
+        //epoch seconds is time created.
+        long currSeconds = LocalDateTime.now().toEpochSecond(ZoneOffset.UTC);
+        long diffSeconds = currSeconds - epochSeconds;
+        long secondsLeft = DavesGraves.configManager.getGraveLifetime() - diffSeconds;
+        if (secondsLeft <= 0) {
+            Bukkit.getScheduler().runTaskLater(DavesGraves.getInstance(), () -> DavesGraves.dataManager.breakGrave(this), 1L);
+            return;
+        }
+        Bukkit.getScheduler().runTaskLater(DavesGraves.getInstance(), () -> DavesGraves.dataManager.breakGrave(this), (secondsLeft * 20L));
+    }
+
     public int getGraveID() {
         return id;
     }
@@ -60,14 +72,5 @@ public class Grave {
         return isValid;
     }
 
-    private void startGraveTimer() {
-        long currSeconds = LocalDateTime.now().toEpochSecond(ZoneOffset.UTC);
-        long diffSeconds = currSeconds - epochSeconds;
-        long secondsLeft = DavesGraves.configManager.getGraveLifetime() - diffSeconds;
-        if (secondsLeft <= 0) {
-            Bukkit.getScheduler().runTaskLater(DavesGraves.getInstance(), () -> DavesGraves.dataManager.breakGrave(this), 1L);
-            return;
-        }
-        Bukkit.getScheduler().runTaskLater(DavesGraves.getInstance(), () -> DavesGraves.dataManager.breakGrave(this), (secondsLeft * 20L));
-    }
+
 }
