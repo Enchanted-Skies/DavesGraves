@@ -143,7 +143,7 @@ public class YmlStorage implements Storage {
 
     @Override
     public long getEpochSeconds(UUID playerUUID, int graveID) {
-        return config.getLong(playerUUID + "." + graveID + ".date", DavesGraves.configManager.getGraveLifetime());
+        return config.getLong(playerUUID + "." + graveID + ".time", 0);
     }
 
     @Override
