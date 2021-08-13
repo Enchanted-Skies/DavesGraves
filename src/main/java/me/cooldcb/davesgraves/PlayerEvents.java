@@ -11,6 +11,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerArmorStandManipulateEvent;
+import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
 
@@ -79,7 +80,7 @@ public class PlayerEvents implements Listener {
             try {
                 armorStand.setGravity(false);
                 armorStand.setVisible(false);
-                armorStand.setInvulnerable(true);
+                armorStand.setInvulnerable(false);
                 armorStand.setRotation(randomDirection, 0f);
                 armorStand.setBasePlate(false);
                 armorStand.setSmall(true);

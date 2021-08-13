@@ -15,15 +15,19 @@ import java.util.List;
 import java.util.UUID;
 
 public class ConfigManager {
+
     private final DavesGraves plugin = DavesGraves.getInstance();
     private FileConfiguration config;
     private List<String> worldList;
     private ItemStack graveHead;
+    private boolean canAllPlayersLoot;
+    private int itemReturnMode; //possibly replace with an Enum.
+    private int maxGraves;
+    private int graveLifetime;
 
     public ConfigManager() {
         plugin.saveDefaultConfig();
         reloadConfig();
-
     }
 
     public void reloadConfig() {
@@ -31,26 +35,30 @@ public class ConfigManager {
         config = plugin.getConfig();
         worldList = reloadWorldList();
         graveHead = getCustomSkull(config.getString("grave-texture"));
+        canAllPlayersLoot = config.getBoolean("all-loot");
+        itemReturnMode = config.getInt("item-return-mode");
+        maxGraves = config.getInt("max-graves");
+        graveLifetime = config.getInt("time");
     }
 
-    private  List<String> reloadWorldList() {
+    private List<String> reloadWorldList() {
         return config.getStringList("worlds");
     }
 
     public boolean canAllPlayersLoot() {
-        return config.getBoolean("all-loot");
+        return canAllPlayersLoot;
     }
 
     public int getItemReturnMode() {
-        return config.getInt("item-return-mode");
+        return itemReturnMode;
     }
 
     public int getMaxGraves() {
-        return config.getInt("max-graves");
+        return maxGraves;
     }
 
     public int getGraveLifetime() {
-        return config.getInt("time");
+        return graveLifetime;
     }
 
     public ItemStack getGraveHead() {
