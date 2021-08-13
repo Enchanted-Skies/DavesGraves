@@ -120,7 +120,7 @@ public class PlayerEvents implements Listener {
             try {
                 armorStand.setGravity(false);
                 armorStand.setVisible(false);
-                armorStand.setInvulnerable(true);
+                armorStand.setInvulnerable(false);
                 armorStand.setRotation(randomDirection, 0f);
                 armorStand.setBasePlate(false);
                 armorStand.setSmall(true);
