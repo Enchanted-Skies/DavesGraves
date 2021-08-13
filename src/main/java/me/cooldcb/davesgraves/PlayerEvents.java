@@ -5,13 +5,14 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.ArmorStand;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerArmorStandManipulateEvent;
-import org.bukkit.event.player.PlayerInteractEntityEvent;
+import org.bukkit.event.player.PlayerToggleSneakEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
 
@@ -32,6 +33,15 @@ public class PlayerEvents implements Listener {
         event.getDrops().clear();
     }
 
+    private boolean isNullContainerData(Player player, String[] containerData, ArmorStand stand) {
+        if (containerData[0].equals("null")) {
+            player.sendMessage("§7The Grave rots before your eyes.");
+            stand.remove();
+            return true;
+        }
+        return false;
+    }
+
     @EventHandler
     public void onArmorStandInteract(PlayerArmorStandManipulateEvent event) {
         ArmorStand armorStand = event.getRightClicked();
@@ -39,7 +49,10 @@ public class PlayerEvents implements Listener {
         if (graveContainer == null) return;
         event.setCancelled(true);
         String[] containerData = graveContainer.split("\\|");
-        playerInteractWithGrave(event.getPlayer(), containerData);
+        if (isNullContainerData(event.getPlayer(), containerData, armorStand)) {
+            return;
+        }
+        playerInteractWithGrave(event.getPlayer(), armorStand, containerData);
     }
 
     @EventHandler
@@ -50,10 +63,31 @@ public class PlayerEvents implements Listener {
         if (graveContainer == null) return;
         event.setCancelled(true);
         String[] containerData = graveContainer.split("\\|");
-        playerInteractWithGrave(player, containerData);
+        if (isNullContainerData(player, containerData, armorStand)) {
+            return;
+        }
+        playerInteractWithGrave(player, armorStand, containerData);
     }
 
-    private void playerInteractWithGrave(Player player, String[] containerData) {
+    @EventHandler
+    public void onPlayerCrouch(PlayerToggleSneakEvent event) {
+        Player player = event.getPlayer();
+        if (player.isDead()) return;
+        List<Entity> entities = player.getNearbyEntities(0.25, 0.25, 0.25);
+        for (Entity entity : entities) {
+            if (!(entity instanceof ArmorStand armorStand)) continue;
+            String graveContainer = armorStand.getPersistentDataContainer().get(graveKey, PersistentDataType.STRING);
+            if (graveContainer == null) continue;
+            event.setCancelled(true);
+            String[] containerData = graveContainer.split("\\|");
+            if (isNullContainerData(player, containerData, armorStand)) {
+                return;
+            }
+            playerInteractWithGrave(player, armorStand, containerData);
+        }
+    }
+
+    private void playerInteractWithGrave(Player player, Entity entity, String[] containerData) {
         String graveOwnerUUIDStr = containerData[0];
         UUID graveOwnerUUID = UUID.fromString(graveOwnerUUIDStr);
         String graveID = containerData[1];
@@ -64,7 +98,13 @@ public class PlayerEvents implements Listener {
                 return;
             }
         }
-        DavesGraves.dataManager.getGrave(graveOwnerUUID, Integer.parseInt(graveID), (grave) -> DavesGraves.dataManager.breakGrave(grave, player));
+        DavesGraves.dataManager.getGrave(graveOwnerUUID, Integer.parseInt(graveID), (grave) -> {
+            if (grave.isValid()) DavesGraves.dataManager.breakGrave(grave, player);
+            else {
+                player.sendMessage("§7The Grave rots before your eyes.");
+                entity.remove();
+            }
+        });
     }
 
     private void createGrave(Player player, List<ItemStack> drops) {
@@ -80,7 +120,7 @@ public class PlayerEvents implements Listener {
             try {
                 armorStand.setGravity(false);
                 armorStand.setVisible(false);
-                armorStand.setInvulnerable(false);
+                armorStand.setInvulnerable(true);
                 armorStand.setRotation(randomDirection, 0f);
                 armorStand.setBasePlate(false);
                 armorStand.setSmall(true);

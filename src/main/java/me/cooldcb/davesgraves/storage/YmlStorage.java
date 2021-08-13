@@ -13,6 +13,7 @@ import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.persistence.PersistentDataType;
 
 import java.io.File;
 import java.io.IOException;
@@ -71,7 +72,7 @@ public class YmlStorage implements Storage {
             ArmorStand graveAS = (ArmorStand) Bukkit.getEntity(UUID.fromString(asUUID));
             if (graveAS != null) {
                 Location asLoc = graveAS.getEyeLocation();
-                graveAS.getPersistentDataContainer().remove(graveKey);
+                graveAS.getPersistentDataContainer().set(graveKey, PersistentDataType.STRING, "null");
                 graveAS.remove();
                 asLoc.getWorld().spawnParticle(Particle.CLOUD, asLoc, 4);
                 ItemStack[] itemArr;
@@ -135,12 +136,14 @@ public class YmlStorage implements Storage {
 
     @Override
     public UUID getArmorStandUUID(UUID playerUUID, int graveID) {
-        return UUID.fromString(config.getString(playerUUID + "." + graveID + ".as-uuid", ""));
+        String uuidStr = config.getString(playerUUID + "." + graveID + ".as-uuid");
+        if (uuidStr == null) return null;
+        return UUID.fromString(uuidStr);
     }
 
     @Override
     public long getEpochSeconds(UUID playerUUID, int graveID) {
-        return config.getLong(playerUUID + "." + graveID + ".date", DavesGraves.configManager.getGraveLifetime());
+        return config.getLong(playerUUID + "." + graveID + ".time", 0);
     }
 
     @Override

@@ -6,7 +6,7 @@
 
     <groupId>me.cooldcb</groupId>
     <artifactId>DavesGraves</artifactId>
-    <version>0.9-SNAPSHOT</version>
+    <version>0.9.2</version>
     <packaging>jar</packaging>
 
     <name>DavesGraves</name>
@@ -24,8 +24,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.7.0</version>
                 <configuration>
-                    <source>16</source>
-                    <target>16</target>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
                 </configuration>
             </plugin>
             <plugin>
@@ -39,7 +39,7 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
-                            <createDependencyReducedPom>false</createDependencyReducedPom>
+                          <createDependencyReducedPom>false</createDependencyReducedPom>
                         </configuration>
                     </execution>
                 </executions>
@@ -65,11 +65,17 @@
     </repositories>
 
     <dependencies>
-        <dependency>
-            <groupId>org.spigotmc</groupId>
-            <artifactId>spigot</artifactId>
-            <version>1.17-R0.1-SNAPSHOT</version>
-            <scope>provided</scope>
-        </dependency>
+      <dependency>
+        <groupId>org.spigotmc</groupId>
+        <artifactId>spigot</artifactId>
+        <version>1.17-R0.1-SNAPSHOT</version>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.jetbrains</groupId>
+        <artifactId>annotations</artifactId>
+        <version>RELEASE</version>
+        <scope>provided</scope>
+      </dependency>
     </dependencies>
 </project>

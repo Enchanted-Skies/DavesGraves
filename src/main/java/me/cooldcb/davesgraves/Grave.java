@@ -13,11 +13,13 @@ public class Grave {
     private final UUID asUUID;
     private final long epochSeconds;
     private final String base64Data;
+    private boolean isValid = true;
 
     public Grave(UUID playerUUID, int id) {
         this.playerUUID = playerUUID;
         this.id = id;
         this.asUUID = DavesGraves.dataManager.getArmorStandUUID(playerUUID, id);
+        if (asUUID == null) isValid = false;
         this.epochSeconds = DavesGraves.dataManager.getEpochSeconds(playerUUID, id);
         this.base64Data = DavesGraves.dataManager.getContents(playerUUID, id);
         startGraveTimer();
@@ -32,6 +34,18 @@ public class Grave {
         if (player == null) return;
         id = DavesGraves.dataManager.getNextGraveID(playerUUID);
         startGraveTimer();
+    }
+
+    private void startGraveTimer() {
+        //epoch seconds is time created.
+        long currSeconds = LocalDateTime.now().toEpochSecond(ZoneOffset.UTC);
+        long diffSeconds = currSeconds - epochSeconds;
+        long secondsLeft = DavesGraves.configManager.getGraveLifetime() - diffSeconds;
+        if (secondsLeft <= 0) {
+            Bukkit.getScheduler().runTaskLater(DavesGraves.getInstance(), () -> DavesGraves.dataManager.breakGrave(this), 1L);
+            return;
+        }
+        Bukkit.getScheduler().runTaskLater(DavesGraves.getInstance(), () -> DavesGraves.dataManager.breakGrave(this), (secondsLeft * 20L));
     }
 
     public int getGraveID() {
@@ -54,14 +68,9 @@ public class Grave {
         return base64Data;
     }
 
-    private void startGraveTimer() {
-        long currSeconds = LocalDateTime.now().toEpochSecond(ZoneOffset.UTC);
-        long diffSeconds = currSeconds - epochSeconds;
-        long secondsLeft = DavesGraves.configManager.getGraveLifetime() - diffSeconds;
-        if (secondsLeft <= 0) {
-            Bukkit.getScheduler().runTaskLater(DavesGraves.getInstance(), () -> DavesGraves.dataManager.breakGrave(this), 1L);
-            return;
-        }
-        Bukkit.getScheduler().runTaskLater(DavesGraves.getInstance(), () -> DavesGraves.dataManager.breakGrave(this), (secondsLeft * 20L));
+    public boolean isValid() {
+        return isValid;
     }
+
+
 }
