@@ -25,52 +25,53 @@ public class GravesCmd implements CommandExecutor, TabCompleter {
     private final NamespacedKey graveKey = new NamespacedKey(DavesGraves.getInstance(), "Grave");
 
     @Override
-    public boolean onCommand(@NotNull CommandSender sender,@NotNull Command command, @NotNull String label, String[] args) {
-        if (!(sender instanceof Player player)) {
-            sender.sendMessage("Console cannot run this command!");
-            return true;
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
+        if (args.length == 0) {
+            PluginDescriptionFile pdf = plugin.getDescription();
+            sender.sendMessage("You are currently running DavesGraves Version: " + pdf.getVersion());
         }
         if (args.length == 1 && args[0].equals("reload")) {
-            if (!player.hasPermission("davesgraves.command.reload")) {
-                player.sendMessage("§cInsufficient permissions");
+            if (!sender.hasPermission("davesgraves.command.reload")) {
+                sender.sendMessage("§cInsufficient permissions");
                 return true;
             }
             DavesGraves.configManager.reloadConfig();
-            player.sendMessage("§aConfig reloaded");
-        } else if (args.length == 1 && args[0].equals("kill")) {
-            if (!player.hasPermission("davesgraves.command.kill")) {
-                player.sendMessage("§cInsufficient permissions");
-                return true;
-            }
-            int tally = 0;
-            World world = player.getWorld();
-            for (Entity entity :  world.getEntities()) {
-                if (!(entity instanceof ArmorStand armorStand)) continue;
-                String graveContainer = armorStand.getPersistentDataContainer().get(graveKey, PersistentDataType.STRING);
-                if (graveContainer == null) continue;
-                entity.remove();
-                tally++;
-            }
-            player.sendMessage(ChatColor.GREEN + "Removed " + tally + (tally == 1 ? " entity!" : " entities!"));
-        } else if (args.length == 1 && args[0].equals("break")) {
-            if (!player.hasPermission("davesgraves.command.kill")) {
-                player.sendMessage("§cInsufficient permissions");
-                return true;
-            }
-            World world = player.getWorld();
-            for (Entity entity :  world.getEntities()) {
-                if (!(entity instanceof ArmorStand armorStand)) continue;
-                String graveContainer = armorStand.getPersistentDataContainer().get(graveKey, PersistentDataType.STRING);
-                if (graveContainer == null) continue;
-                String[] containerData = graveContainer.split("\\|");
-                Grave grave = new Grave(UUID.fromString(containerData[0]), Integer.parseInt(containerData[1]));
-                if (!grave.isValid()) entity.remove();
-                DavesGraves.dataManager.breakGrave(grave);
-            }
-        } else {
-            PluginDescriptionFile pdf = plugin.getDescription();
-            player.sendMessage("You are currently running DavesGraves Version: " + pdf.getVersion());
+            sender.sendMessage("§aConfig reloaded");
         }
+        if (sender instanceof Player player) {
+            if (args.length == 1 && args[0].equals("kill")) {
+                if (!sender.hasPermission("davesgraves.command.kill")) {
+                    sender.sendMessage("§cInsufficient permissions");
+                    return true;
+                }
+                int tally = 0;
+                World world = player.getWorld();
+                for (Entity entity :  world.getEntities()) {
+                    if (!(entity instanceof ArmorStand armorStand)) continue;
+                    String graveContainer = armorStand.getPersistentDataContainer().get(graveKey, PersistentDataType.STRING);
+                    if (graveContainer == null) continue;
+                    entity.remove();
+                    tally++;
+                }
+                player.sendMessage(ChatColor.GREEN + "Removed " + tally + (tally == 1 ? " entity!" : " entities!"));
+            } else if (args.length == 1 && args[0].equals("break")) {
+                if (!player.hasPermission("davesgraves.command.kill")) {
+                    player.sendMessage("§cInsufficient permissions");
+                    return true;
+                }
+                World world = player.getWorld();
+                for (Entity entity :  world.getEntities()) {
+                    if (!(entity instanceof ArmorStand armorStand)) continue;
+                    String graveContainer = armorStand.getPersistentDataContainer().get(graveKey, PersistentDataType.STRING);
+                    if (graveContainer == null) continue;
+                    String[] containerData = graveContainer.split("\\|");
+                    Grave grave = new Grave(UUID.fromString(containerData[0]), Integer.parseInt(containerData[1]));
+                    if (!grave.isValid()) entity.remove();
+                    DavesGraves.dataManager.breakGrave(grave);
+                }
+            }
+        }
+
         return true;
     }
 

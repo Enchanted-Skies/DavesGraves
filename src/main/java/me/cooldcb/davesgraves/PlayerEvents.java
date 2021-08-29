@@ -15,9 +15,11 @@ import org.bukkit.event.player.PlayerArmorStandManipulateEvent;
 import org.bukkit.event.player.PlayerToggleSneakEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -28,8 +30,13 @@ public class PlayerEvents implements Listener {
     public void onDeath(PlayerDeathEvent event) {
         Player player = event.getEntity();
         if (!DavesGraves.configManager.isWorldEnabled(player.getWorld().getName())) return;
-        List<ItemStack> drops = event.getDrops();
-        createGrave(player, drops);
+        List<ItemStack> drops = new ArrayList<>(event.getDrops());
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                createGrave(player, drops);
+            }
+        }.runTaskLater(DavesGraves.getInstance(), 20L);
         event.getDrops().clear();
     }
 
@@ -134,6 +141,6 @@ public class PlayerEvents implements Listener {
         }));
         Grave grave = new Grave(playerUUID, graveAS.getUniqueId(), LocalDateTime.now().toEpochSecond(ZoneOffset.UTC), base64Data);
         DavesGraves.dataManager.saveGrave(grave);
-        Bukkit.getScheduler().runTaskLater(DavesGraves.getInstance(), () -> player.sendMessage("§7You just died, a grave has been created at §c" + pLoc.getBlockX() + ", " + pLoc.getBlockY() + ", " + pLoc.getBlockZ() + " §7with your loot in."), 20);
+        player.sendMessage("§7You just died, a grave has been created at §c" + pLoc.getBlockX() + ", " + pLoc.getBlockY() + ", " + pLoc.getBlockZ() + " §7with your loot in.");
     }
 }
