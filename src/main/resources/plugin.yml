@@ -1,8 +1,9 @@
-name: DavesGraves
+name: EnchantedGraves
 version: ${project.version}
-main: me.cooldcb.davesgraves.DavesGraves
+main: org.enchantedskies.enchantedgraves.EnchantedGraves
 api-version: 1.13
+authors: ["Dav_e", "zeddit", "Xemor_"]
 commands:
   graves:
-    description: Graves umbrella command
+    description: The base command of EnchantedGraves
     usage: /graves

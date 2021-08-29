@@ -1,8 +1,8 @@
-package me.cooldcb.davesgraves.storage;
+package org.enchantedskies.enchantedgraves.storage;
 
-import me.cooldcb.davesgraves.DavesGraves;
-import me.cooldcb.davesgraves.Grave;
-import me.cooldcb.davesgraves.libraries.ItemSerialization;
+import org.enchantedskies.enchantedgraves.EnchantedGraves;
+import org.enchantedskies.enchantedgraves.Grave;
+import org.enchantedskies.enchantedgraves.libraries.ItemSerialization;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
@@ -21,8 +21,8 @@ import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class YmlStorage implements Storage {
-    private final DavesGraves plugin = DavesGraves.getInstance();
-    private final NamespacedKey graveKey = new NamespacedKey(DavesGraves.getInstance(), "Grave");
+    private final EnchantedGraves plugin = EnchantedGraves.getInstance();
+    private final NamespacedKey graveKey = new NamespacedKey(EnchantedGraves.getInstance(), "Grave");
     private File dataFile;
     private YamlConfiguration config;
     private final ReentrantLock fileLock = new ReentrantLock();
@@ -82,7 +82,7 @@ public class YmlStorage implements Storage {
                     err.printStackTrace();
                     return;
                 }
-                int itemReturnMode = DavesGraves.configManager.getItemReturnMode();
+                int itemReturnMode = EnchantedGraves.configManager.getItemReturnMode();
                 if (itemReturnMode != 1 && player == null) itemReturnMode = 1;
                 switch (itemReturnMode) {
                     case 0 -> giveItemsToPlayer(itemArr, player);

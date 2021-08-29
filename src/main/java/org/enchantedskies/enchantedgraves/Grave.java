@@ -1,4 +1,4 @@
-package me.cooldcb.davesgraves;
+package org.enchantedskies.enchantedgraves;
 
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -18,10 +18,10 @@ public class Grave {
     public Grave(UUID playerUUID, int id) {
         this.playerUUID = playerUUID;
         this.id = id;
-        this.asUUID = DavesGraves.dataManager.getArmorStandUUID(playerUUID, id);
+        this.asUUID = EnchantedGraves.dataManager.getArmorStandUUID(playerUUID, id);
         if (asUUID == null) isValid = false;
-        this.epochSeconds = DavesGraves.dataManager.getEpochSeconds(playerUUID, id);
-        this.base64Data = DavesGraves.dataManager.getContents(playerUUID, id);
+        this.epochSeconds = EnchantedGraves.dataManager.getEpochSeconds(playerUUID, id);
+        this.base64Data = EnchantedGraves.dataManager.getContents(playerUUID, id);
         startGraveTimer();
     }
 
@@ -32,7 +32,7 @@ public class Grave {
         this.base64Data = base64Data;
         Player player = Bukkit.getPlayer(playerUUID);
         if (player == null) return;
-        id = DavesGraves.dataManager.getNextGraveID(playerUUID);
+        id = EnchantedGraves.dataManager.getNextGraveID(playerUUID);
         startGraveTimer();
     }
 
@@ -40,12 +40,12 @@ public class Grave {
         //epoch seconds is time created.
         long currSeconds = LocalDateTime.now().toEpochSecond(ZoneOffset.UTC);
         long diffSeconds = currSeconds - epochSeconds;
-        long secondsLeft = DavesGraves.configManager.getGraveLifetime() - diffSeconds;
+        long secondsLeft = EnchantedGraves.configManager.getGraveLifetime() - diffSeconds;
         if (secondsLeft <= 0) {
-            Bukkit.getScheduler().runTaskLater(DavesGraves.getInstance(), () -> DavesGraves.dataManager.breakGrave(this), 1L);
+            Bukkit.getScheduler().runTaskLater(EnchantedGraves.getInstance(), () -> EnchantedGraves.dataManager.breakGrave(this), 1L);
             return;
         }
-        Bukkit.getScheduler().runTaskLater(DavesGraves.getInstance(), () -> DavesGraves.dataManager.breakGrave(this), (secondsLeft * 20L));
+        Bukkit.getScheduler().runTaskLater(EnchantedGraves.getInstance(), () -> EnchantedGraves.dataManager.breakGrave(this), (secondsLeft * 20L));
     }
 
     public int getGraveID() {

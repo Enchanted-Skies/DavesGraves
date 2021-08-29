@@ -1,6 +1,6 @@
-package me.cooldcb.davesgraves.storage;
+package org.enchantedskies.enchantedgraves.storage;
 
-import me.cooldcb.davesgraves.Grave;
+import org.enchantedskies.enchantedgraves.Grave;
 import org.bukkit.entity.Player;
 
 import java.util.UUID;

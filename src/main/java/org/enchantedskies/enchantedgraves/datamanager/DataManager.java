@@ -1,9 +1,9 @@
-package me.cooldcb.davesgraves.datamanager;
+package org.enchantedskies.enchantedgraves.datamanager;
 
-import me.cooldcb.davesgraves.DavesGraves;
-import me.cooldcb.davesgraves.Grave;
-import me.cooldcb.davesgraves.storage.Storage;
-import me.cooldcb.davesgraves.storage.YmlStorage;
+import org.enchantedskies.enchantedgraves.EnchantedGraves;
+import org.enchantedskies.enchantedgraves.Grave;
+import org.enchantedskies.enchantedgraves.storage.Storage;
+import org.enchantedskies.enchantedgraves.storage.YmlStorage;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -22,7 +22,7 @@ public class DataManager {
                 public void run() {
                     onComplete.accept(init);
                 }
-            }.runTask(DavesGraves.getInstance());
+            }.runTask(EnchantedGraves.getInstance());
         });
     }
 
@@ -34,7 +34,7 @@ public class DataManager {
                 public void run() {
                     onComplete.accept(grave);
                 }
-            }.runTask(DavesGraves.getInstance());
+            }.runTask(EnchantedGraves.getInstance());
         });
     }
 
@@ -45,7 +45,7 @@ public class DataManager {
     public void saveGrave(Grave grave) {
         Storage.SERVICE.submit(() -> {
             UUID playerUUID = grave.getPlayerUUID();
-            if (getGraveCount(playerUUID) >= DavesGraves.configManager.getMaxGraves()) {
+            if (getGraveCount(playerUUID) >= EnchantedGraves.configManager.getMaxGraves()) {
                 int lowestID = getLowestGraveID(playerUUID);
                 if (lowestID != -1) breakGrave(grave);
             }

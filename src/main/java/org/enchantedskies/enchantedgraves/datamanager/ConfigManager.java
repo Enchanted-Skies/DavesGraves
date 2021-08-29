@@ -1,8 +1,8 @@
-package me.cooldcb.davesgraves.datamanager;
+package org.enchantedskies.enchantedgraves.datamanager;
 
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
-import me.cooldcb.davesgraves.DavesGraves;
+import org.enchantedskies.enchantedgraves.EnchantedGraves;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.inventory.ItemStack;
@@ -16,7 +16,7 @@ import java.util.UUID;
 
 public class ConfigManager {
 
-    private final DavesGraves plugin = DavesGraves.getInstance();
+    private final EnchantedGraves plugin = EnchantedGraves.getInstance();
     private FileConfiguration config;
     private List<String> worldList;
     private ItemStack graveHead;

@@ -1,19 +1,19 @@
-package me.cooldcb.davesgraves;
+package org.enchantedskies.enchantedgraves;
 
-import me.cooldcb.davesgraves.commands.GravesCmd;
-import me.cooldcb.davesgraves.datamanager.ConfigManager;
-import me.cooldcb.davesgraves.datamanager.DataManager;
-import me.cooldcb.davesgraves.storage.Storage;
+import org.enchantedskies.enchantedgraves.commands.GravesCmd;
+import org.enchantedskies.enchantedgraves.datamanager.ConfigManager;
+import org.enchantedskies.enchantedgraves.datamanager.DataManager;
+import org.enchantedskies.enchantedgraves.storage.Storage;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 
-public final class DavesGraves extends JavaPlugin implements Listener {
-    private static DavesGraves plugin;
+public final class EnchantedGraves extends JavaPlugin implements Listener {
+    private static EnchantedGraves plugin;
     public static ConfigManager configManager;
     public static DataManager dataManager;
 
     private void setThreadIOName() {
-        Storage.SERVICE.submit(() -> Thread.currentThread().setName("DavesGraves IO Thread"));
+        Storage.SERVICE.submit(() -> Thread.currentThread().setName("EnchantedGraves IO Thread"));
     }
 
     @Override
@@ -34,7 +34,7 @@ public final class DavesGraves extends JavaPlugin implements Listener {
         });
     }
 
-    public static DavesGraves getInstance() {
+    public static EnchantedGraves getInstance() {
         return plugin;
     }
 

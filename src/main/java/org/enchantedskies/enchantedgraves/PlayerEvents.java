@@ -1,7 +1,6 @@
-package me.cooldcb.davesgraves;
+package org.enchantedskies.enchantedgraves;
 
-import me.cooldcb.davesgraves.libraries.ItemSerialization;
-import org.bukkit.Bukkit;
+import org.enchantedskies.enchantedgraves.libraries.ItemSerialization;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.ArmorStand;
@@ -24,19 +23,19 @@ import java.util.List;
 import java.util.UUID;
 
 public class PlayerEvents implements Listener {
-    private final NamespacedKey graveKey = new NamespacedKey(DavesGraves.getInstance(), "Grave");
+    private final NamespacedKey graveKey = new NamespacedKey(EnchantedGraves.getInstance(), "Grave");
 
     @EventHandler
     public void onDeath(PlayerDeathEvent event) {
         Player player = event.getEntity();
-        if (!DavesGraves.configManager.isWorldEnabled(player.getWorld().getName())) return;
+        if (!EnchantedGraves.configManager.isWorldEnabled(player.getWorld().getName())) return;
         List<ItemStack> drops = new ArrayList<>(event.getDrops());
         new BukkitRunnable() {
             @Override
             public void run() {
                 createGrave(player, drops);
             }
-        }.runTaskLater(DavesGraves.getInstance(), 20L);
+        }.runTaskLater(EnchantedGraves.getInstance(), 20L);
         event.getDrops().clear();
     }
 
@@ -76,37 +75,19 @@ public class PlayerEvents implements Listener {
         playerInteractWithGrave(player, armorStand, containerData);
     }
 
-    @EventHandler
-    public void onPlayerCrouch(PlayerToggleSneakEvent event) {
-        Player player = event.getPlayer();
-        if (player.isDead()) return;
-        List<Entity> entities = player.getNearbyEntities(0.25, 0.25, 0.25);
-        for (Entity entity : entities) {
-            if (!(entity instanceof ArmorStand armorStand)) continue;
-            String graveContainer = armorStand.getPersistentDataContainer().get(graveKey, PersistentDataType.STRING);
-            if (graveContainer == null) continue;
-            event.setCancelled(true);
-            String[] containerData = graveContainer.split("\\|");
-            if (isNullContainerData(player, containerData, armorStand)) {
-                return;
-            }
-            playerInteractWithGrave(player, armorStand, containerData);
-        }
-    }
-
     private void playerInteractWithGrave(Player player, Entity entity, String[] containerData) {
         String graveOwnerUUIDStr = containerData[0];
         UUID graveOwnerUUID = UUID.fromString(graveOwnerUUIDStr);
         String graveID = containerData[1];
-        if (!DavesGraves.configManager.canAllPlayersLoot()) {
+        if (!EnchantedGraves.configManager.canAllPlayersLoot()) {
             UUID playerUUID = player.getUniqueId();
             if (!playerUUID.equals(graveOwnerUUID)) {
                 player.sendMessage("§cThis is not your loot!");
                 return;
             }
         }
-        DavesGraves.dataManager.getGrave(graveOwnerUUID, Integer.parseInt(graveID), (grave) -> {
-            if (grave.isValid()) DavesGraves.dataManager.breakGrave(grave, player);
+        EnchantedGraves.dataManager.getGrave(graveOwnerUUID, Integer.parseInt(graveID), (grave) -> {
+            if (grave.isValid()) EnchantedGraves.dataManager.breakGrave(grave, player);
             else {
                 player.sendMessage("§7The Grave rots before your eyes.");
                 entity.remove();
@@ -133,14 +114,14 @@ public class PlayerEvents implements Listener {
                 armorStand.setSmall(true);
                 armorStand.setCustomName("§6§l" + player.getName() + "§6§l's Loot");
                 armorStand.setCustomNameVisible(true);
-                armorStand.getEquipment().setHelmet(DavesGraves.configManager.getGraveHead());
-                armorStand.getPersistentDataContainer().set(graveKey, PersistentDataType.STRING, playerUUID + "|" + DavesGraves.dataManager.getNextGraveID(player.getUniqueId()));
+                armorStand.getEquipment().setHelmet(EnchantedGraves.configManager.getGraveHead());
+                armorStand.getPersistentDataContainer().set(graveKey, PersistentDataType.STRING, playerUUID + "|" + EnchantedGraves.dataManager.getNextGraveID(player.getUniqueId()));
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }));
         Grave grave = new Grave(playerUUID, graveAS.getUniqueId(), LocalDateTime.now().toEpochSecond(ZoneOffset.UTC), base64Data);
-        DavesGraves.dataManager.saveGrave(grave);
+        EnchantedGraves.dataManager.saveGrave(grave);
         player.sendMessage("§7You just died, a grave has been created at §c" + pLoc.getBlockX() + ", " + pLoc.getBlockY() + ", " + pLoc.getBlockZ() + " §7with your loot in.");
     }
 }
