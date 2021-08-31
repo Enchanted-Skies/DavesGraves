@@ -1,0 +1,8 @@
+nameTagFormat: &4%name%'s loot
+#leave -1 for no expiry.
+graveDuration: 10
+durationUnit: minutes
+graveTexture: ewogICJ0aW1lc3RhbXAiIDogMTYyNjk1OTYyNTExOCwKICAicHJvZmlsZUlkIiA6ICI3M2Q0ZTA2ODNhNmQ0YzhiOGY4NTMzMjM1NDY5NTVjNCIsCiAgInByb2ZpbGVOYW1lIiA6ICJNSEZfQ2hlc3QiLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNzU4MzA1ZTUyN2ZjZjA4NTI1ZmRmZjA3ZTRjZDZlNzk3NzRhY2RkNDI2Y2MyNzMyN2Q0NWRmOGE1ZmY4NjQxOSIKICAgIH0KICB9Cn0=
+onlyOwnersCanLoot: true
+doesNotOwnMessage: &4You can't loot this grave, as it isn't yours.
+invalidGrave: &4This grave is invalid.
