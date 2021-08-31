@@ -1,8 +1,6 @@
 package me.zeddit.graves;
 
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.yaml.snakeyaml.Yaml;
 
 public final class GravesMain extends JavaPlugin {
     public static JavaPlugin instance;
