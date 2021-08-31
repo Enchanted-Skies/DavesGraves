@@ -1,56 +1,101 @@
 package me.zeddit.graves;
 
+import com.destroystokyo.paper.event.player.PlayerArmorChangeEvent;
+import com.mojang.authlib.GameProfile;
+import com.mojang.authlib.properties.Property;
+import de.themoep.minedown.adventure.MineDown;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityInteractEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerArmorStandManipulateEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
-import java.sql.Time;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
-import java.util.Objects;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
+import java.util.UUID;
 
 public class DeathListener implements Listener {
+    private final GraveCreator creator;
 
-
+    public DeathListener(GraveCreator creator) {
+        this.creator = creator;
+    }
     @EventHandler
     public void onDeath(PlayerDeathEvent e) {
-        final List<ItemStack> drops = new ArrayList<>(e.getDrops());
+        final List<ItemStack> items = new ArrayList<>(e.getDrops());
         e.getDrops().clear();
-        final Location standLoc = e.getEntity().getLocation().clone();
-        if (standLoc.getY() <= 6) standLoc.setX(7.00);
-        //needs to be made async.. at least in parts. Features to be impl'd- custom skull texture, executor to remove graves after expiry
-        ArmorStand stand = standLoc.getWorld().spawn(standLoc, ArmorStand.class, (armorStand) -> {
-            armorStand.setGravity(false);
-            armorStand.setVisible(false);
-            armorStand.setBasePlate(false);
-            armorStand.setSmall(true);
-            armorStand.setCanMove(false);
-            final PersistentDataContainer container = armorStand.getPersistentDataContainer();
-            container.set(GraveKeys.GRAVE_OWNER.toKey(), PersistentDataType.STRING, e.getEntity().getUniqueId().toString());
-            final FileConfiguration config = GravesMain.getInstance().getConfig();
-            final TimeUnit unit = TimeUnit
-                    .valueOf(Objects.requireNonNull(config
-                            .getString("durationUnit")).toUpperCase(Locale.ROOT));
-            //this will panic upon unboxing a null value
-            final long duration = config.getLong("graveDuration");
-            final long expiry = System.currentTimeMillis() + unit.convert(duration, TimeUnit.MILLISECONDS);
-            container.set(GraveKeys.EXPIRY.toKey(), PersistentDataType.LONG, expiry);
-            final List<byte[]> inventory = drops.stream().map(ItemStack::serializeAsBytes).collect(Collectors.toList());
-            for (int i = 0; i < inventory.size(); i++) {
-                container.set(new NamespacedKey(GravesMain.getInstance(), String.valueOf(i)), PersistentDataType.BYTE_ARRAY, inventory.get(i));
-            }
-            container.set(GraveKeys.INVENTORY_SIZE.toKey(), PersistentDataType.INTEGER, inventory.size());
-
-        });
+        creator.createGrave(e.getEntity().getLocation(), items, e.getEntity());
     }
+    @EventHandler
+    public void onArmorStandInteract(PlayerArmorStandManipulateEvent e) {
+        final ArmorStand stand = e.getRightClicked();
+        if (!stand.getPersistentDataContainer().has(GraveKeys.GRAVE_OWNER.toKey(), PersistentDataType.STRING)) return;
+        final FileConfiguration config =GravesMain.getInstance().getConfig();
+        final boolean ownerLoot = config.getBoolean("onlyOwnersCanLoot");
+        final String ownerIDStr = stand.getPersistentDataContainer().get(GraveKeys.GRAVE_OWNER.toKey(), PersistentDataType.STRING);
+        final Component invalidGrave = new MineDown(config.getString("invalidGrave")).toComponent();
+        if (ownerIDStr == null) {
+            e.getRightClicked().remove();
+            e.getPlayer().sendMessage(invalidGrave);
+            return;
+        }
+        if (ownerLoot && !(UUID.fromString(ownerIDStr).equals(e.getPlayer().getUniqueId()))) {
+            e.getPlayer().sendMessage(new MineDown(config.getString("doesNotOwnMessage")).toComponent());
+            return;
+        }
+        final long expiry = stand.getPersistentDataContainer().getOrDefault(GraveKeys.EXPIRY.toKey(), PersistentDataType.LONG, -2L);
+        if (expiry == -2) {
+            e.getRightClicked().remove();
+            e.getPlayer().sendMessage(invalidGrave);
+            return;
+        }
+        if (expiry != -1) {
+            if (System.currentTimeMillis() >= expiry) {
+                e.getRightClicked().remove();
+                e.getPlayer().sendMessage(invalidGrave);
+                return;
+            }
+        }
+        try {
+            final List<ItemStack> toDrop = unpackInventory(stand.getPersistentDataContainer());
+            final Location itemLoc = stand.getLocation().clone();
+            stand.remove();
+            toDrop.forEach(it -> itemLoc.getWorld().dropItem(itemLoc, it));
+        } catch (IOException ex) {
+            e.getRightClicked().remove();
+            e.getPlayer().sendMessage(invalidGrave);
+        }
+    }
+
+    private List<ItemStack> unpackInventory(PersistentDataContainer container) throws IOException {
+        final int len = container.getOrDefault(GraveKeys.INVENTORY_SIZE.toKey(), PersistentDataType.INTEGER, -1);
+        if (len < 0) {
+            throw new IOException("Invalid length of inventory, or could not find the mapping at all.");
+        }
+        final List<ItemStack> itemStacks = new ArrayList<>();
+        for (int i = 0; i < len; i++) {
+            try {
+                final NamespacedKey key = new NamespacedKey(GravesMain.getInstance(), String.valueOf(i));
+                final byte[] bytes = container.get(key, PersistentDataType.BYTE_ARRAY);
+                if (bytes == null) {
+                    throw new IOException("Could not find contents for index " + i + " !");
+                }
+                itemStacks.add(ItemStack.deserializeBytes(bytes));
+            } catch (Exception e) {
+                throw new IOException("Deserialisation error");
+            }
+        }
+        return itemStacks;
+    }
+
 }
