@@ -19,6 +19,9 @@ public final class GravesMain extends JavaPlugin {
         instance = this;
         service.submit(() -> Thread.currentThread().setName("Graves Async IO Thread 1"));
         saveDefaultConfig();
+        final GraveCreator creator = new GraveCreator();
+        final DeathListener listener = new DeathListener(creator);
+        getServer().getPluginManager().registerEvents(listener, this);
     }
 
     @Override

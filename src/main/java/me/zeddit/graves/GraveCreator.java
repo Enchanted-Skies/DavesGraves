@@ -51,21 +51,24 @@ public class GraveCreator {
                             .replace("name", new MineDownStringifier().stringify(owner.displayName())).toComponent());
             final PersistentDataContainer container = armorStand.getPersistentDataContainer();
             container.set(GraveKeys.GRAVE_OWNER.toKey(), PersistentDataType.STRING, owner.getUniqueId().toString());
-            final FileConfiguration config = GravesMain.getInstance().getConfig();
-            final TimeUnit unit = TimeUnit
-                    .valueOf(Objects.requireNonNull(config
-                            .getString("durationUnit")).toUpperCase(Locale.ROOT));
-            //this will panic upon unboxing a null value
-            final long duration = config.getLong("graveDuration");
-            final long durationConv = unit.convert(duration, TimeUnit.MILLISECONDS);
-            final long expiry = System.currentTimeMillis() + durationConv;
-            container.set(GraveKeys.EXPIRY.toKey(), PersistentDataType.LONG, expiry);
             final List<byte[]> inventory = contents.stream().map(ItemStack::serializeAsBytes).collect(Collectors.toList());
             for (int i = 0; i < inventory.size(); i++) {
                 container.set(new NamespacedKey(GravesMain.getInstance(), String.valueOf(i)), PersistentDataType.BYTE_ARRAY, inventory.get(i));
             }
             container.set(GraveKeys.INVENTORY_SIZE.toKey(), PersistentDataType.INTEGER, inventory.size());
-            GravesMain.getInstance().getService().schedule(armorStand::remove, durationConv, TimeUnit.MILLISECONDS);
+            final FileConfiguration config = GravesMain.getInstance().getConfig();
+            final long duration = config.getLong("graveDuration");
+            if (duration == -1) {
+                container.set(GraveKeys.EXPIRY.toKey(), PersistentDataType.LONG, -1L);
+            } else {
+                final TimeUnit unit = TimeUnit
+                        .valueOf(Objects.requireNonNull(config
+                                .getString("durationUnit")).toUpperCase(Locale.ROOT));
+                final long durationConv = TimeUnit.MILLISECONDS.convert(duration, unit);
+                final long expiry = System.currentTimeMillis() + durationConv;
+                container.set(GraveKeys.EXPIRY.toKey(), PersistentDataType.LONG, expiry);
+                GravesMain.getInstance().getService().schedule(armorStand::remove, durationConv, TimeUnit.MILLISECONDS);
+            }
         });
     }
     public void reloadGraveTexture() {
@@ -85,7 +88,6 @@ public class GraveCreator {
                 Field metaProfileField = skullMeta.getClass().getDeclaredField("profile");
                 metaProfileField.setAccessible(true);
                 metaProfileField.set(skullMeta, makeProfile(texture));
-
             } catch (NoSuchFieldException | IllegalAccessException ex2) {
                 ex2.printStackTrace();
             }
@@ -99,7 +101,7 @@ public class GraveCreator {
                 b64.substring(b64.length() - 20).hashCode(),
                 b64.substring(b64.length() - 10).hashCode()
         );
-        GameProfile profile = new GameProfile(id, "Player");
+        GameProfile profile = new GameProfile(id, "Grave");
         profile.getProperties().put("textures", new Property("textures", b64));
         return profile;
     }

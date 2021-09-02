@@ -7,8 +7,11 @@ import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.ArmorStand;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerArmorStandManipulateEvent;
 import org.bukkit.inventory.ItemStack;
@@ -20,45 +23,40 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+
+// Convert to a record my ass
 public class DeathListener implements Listener {
     private final GraveCreator creator;
 
     public DeathListener(GraveCreator creator) {
         this.creator = creator;
     }
-    @EventHandler
-    public void onDeath(PlayerDeathEvent e) {
-        final List<ItemStack> items = new ArrayList<>(e.getDrops());
-        e.getDrops().clear();
-        creator.createGrave(e.getEntity().getLocation(), items, e.getEntity());
-    }
-    @EventHandler
-    public void onArmorStandInteract(PlayerArmorStandManipulateEvent e) {
-        final ArmorStand stand = e.getRightClicked();
-        if (!stand.getPersistentDataContainer().has(GraveKeys.GRAVE_OWNER.toKey(), PersistentDataType.STRING)) return;
+
+
+    private void unpackGrave(ArmorStand stand, Player manipulator) {
         final FileConfiguration config =GravesMain.getInstance().getConfig();
         final boolean ownerLoot = config.getBoolean("onlyOwnersCanLoot");
         final String ownerIDStr = stand.getPersistentDataContainer().get(GraveKeys.GRAVE_OWNER.toKey(), PersistentDataType.STRING);
         final Component invalidGrave = new MineDown(config.getString("invalidGrave")).toComponent();
         if (ownerIDStr == null) {
-            e.getRightClicked().remove();
-            e.getPlayer().sendMessage(invalidGrave);
+            stand.remove();
+            manipulator.sendMessage(invalidGrave);
             return;
         }
-        if (ownerLoot && !(UUID.fromString(ownerIDStr).equals(e.getPlayer().getUniqueId()))) {
-            e.getPlayer().sendMessage(new MineDown(config.getString("doesNotOwnMessage")).toComponent());
+        if (ownerLoot && !(UUID.fromString(ownerIDStr).equals(manipulator.getUniqueId()))) {
+            manipulator.sendMessage(new MineDown(config.getString("doesNotOwnMessage")).toComponent());
             return;
         }
         final long expiry = stand.getPersistentDataContainer().getOrDefault(GraveKeys.EXPIRY.toKey(), PersistentDataType.LONG, -2L);
         if (expiry == -2) {
-            e.getRightClicked().remove();
-            e.getPlayer().sendMessage(invalidGrave);
+            stand.remove();
+            manipulator.sendMessage(invalidGrave);
             return;
         }
         if (expiry != -1) {
             if (System.currentTimeMillis() >= expiry) {
-                e.getRightClicked().remove();
-                e.getPlayer().sendMessage(invalidGrave);
+                stand.remove();
+                manipulator.sendMessage(invalidGrave);
                 return;
             }
         }
@@ -68,9 +66,24 @@ public class DeathListener implements Listener {
             stand.remove();
             toDrop.forEach(it -> itemLoc.getWorld().dropItem(itemLoc, it));
         } catch (IOException ex) {
-            e.getRightClicked().remove();
-            e.getPlayer().sendMessage(invalidGrave);
+            stand.remove();
+            manipulator.sendMessage(invalidGrave);
         }
+    }
+
+    @EventHandler
+    public void onDeath(PlayerDeathEvent e) {
+        final List<ItemStack> items = new ArrayList<>(e.getDrops());
+        e.getDrops().clear();
+        creator.createGrave(e.getEntity().getLocation(), items, e.getEntity());
+    }
+
+    @EventHandler
+    public void onArmorStandInteract(PlayerArmorStandManipulateEvent e) {
+        final ArmorStand stand = e.getRightClicked();
+        if (!stand.getPersistentDataContainer().has(GraveKeys.GRAVE_OWNER.toKey(), PersistentDataType.STRING)) return;
+        e.setCancelled(true);
+        unpackGrave(stand, e.getPlayer());
     }
 
     private List<ItemStack> unpackInventory(PersistentDataContainer container) throws IOException {
@@ -94,4 +107,13 @@ public class DeathListener implements Listener {
         return itemStacks;
     }
 
+    @EventHandler
+    public void externalGraveBreak(EntityDamageByEntityEvent e) {
+        if ((e.getEntity() instanceof final ArmorStand stand) && e.getCause() == EntityDamageEvent.DamageCause.ENTITY_ATTACK && (e.getDamager() instanceof final Player player)) {
+            if (stand.getPersistentDataContainer().has(GraveKeys.GRAVE_OWNER.toKey(), PersistentDataType.STRING)) {
+                e.setCancelled(true);
+                unpackGrave(stand, player);
+            }
+        }
+    }
 }
