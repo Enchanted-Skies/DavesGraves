@@ -4,7 +4,6 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import de.themoep.minedown.adventure.MineDown;
 import de.themoep.minedown.adventure.MineDownStringifier;
-import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -36,7 +35,7 @@ public class GraveCreator {
 
     public void createGrave(Location loc, List<ItemStack> contents, Player owner) {
         if (loc.getY() <= 6) loc.setX(7.00);
-        //needs to be made async.. at least in parts. Features to be impl'd- custom skull texture, executor to remove graves after expiry
+        //needs to be made async.. at least in parts.
         ArmorStand stand = loc.getWorld().spawn(loc, ArmorStand.class, (armorStand) -> {
             armorStand.setGravity(false);
             armorStand.setVisible(false);
@@ -58,13 +57,15 @@ public class GraveCreator {
                             .getString("durationUnit")).toUpperCase(Locale.ROOT));
             //this will panic upon unboxing a null value
             final long duration = config.getLong("graveDuration");
-            final long expiry = System.currentTimeMillis() + unit.convert(duration, TimeUnit.MILLISECONDS);
+            final long durationConv = unit.convert(duration, TimeUnit.MILLISECONDS);
+            final long expiry = System.currentTimeMillis() + durationConv;
             container.set(GraveKeys.EXPIRY.toKey(), PersistentDataType.LONG, expiry);
             final List<byte[]> inventory = contents.stream().map(ItemStack::serializeAsBytes).collect(Collectors.toList());
             for (int i = 0; i < inventory.size(); i++) {
                 container.set(new NamespacedKey(GravesMain.getInstance(), String.valueOf(i)), PersistentDataType.BYTE_ARRAY, inventory.get(i));
             }
             container.set(GraveKeys.INVENTORY_SIZE.toKey(), PersistentDataType.INTEGER, inventory.size());
+            GravesMain.getInstance().getService().schedule(armorStand::remove, durationConv, TimeUnit.MILLISECONDS);
         });
     }
     public void reloadGraveTexture() {

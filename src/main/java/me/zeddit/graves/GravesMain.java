@@ -2,20 +2,30 @@ package me.zeddit.graves;
 
 import org.bukkit.plugin.java.JavaPlugin;
 
-public final class GravesMain extends JavaPlugin {
-    public static JavaPlugin instance;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
-    public static JavaPlugin getInstance() {
+public final class GravesMain extends JavaPlugin {
+    private static GravesMain instance;
+    private final ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
+
+    public static GravesMain getInstance() {
         return instance;
     }
+
 
     @Override
     public void onEnable() {
         instance = this;
+        service.submit(() -> Thread.currentThread().setName("Graves Async IO Thread 1"));
         saveDefaultConfig();
     }
 
     @Override
     public void onDisable() {
+    }
+
+    public ScheduledExecutorService getService() {
+        return service;
     }
 }

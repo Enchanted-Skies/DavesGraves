@@ -3,7 +3,7 @@ package me.zeddit.graves;
 import org.bukkit.NamespacedKey;
 
 
-public enum GraveKeys implements Keyable<GraveKeys> {
+public enum GraveKeys implements Keyable {
     GRAVE_OWNER("graveOwner"),
     EXPIRY("expiry"),
     INVENTORY_SIZE("invSize");
@@ -35,6 +35,6 @@ public enum GraveKeys implements Keyable<GraveKeys> {
     }
 }
 
-interface Keyable<T> {
+interface Keyable {
     NamespacedKey toKey();
 }
