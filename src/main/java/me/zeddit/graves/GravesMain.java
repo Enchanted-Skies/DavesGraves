@@ -1,5 +1,6 @@
 package me.zeddit.graves;
 
+import org.bukkit.Bukkit;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
 import org.bukkit.event.EventHandler;
@@ -54,6 +55,9 @@ public final class GravesMain extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        final int aborted = service.shutdownNow().size();
+        if (aborted == 0) return;
+        Bukkit.getLogger().warning("Aborted cleaning up " + aborted + (aborted == 1 ? " grave!" : " graves!"));
     }
 
     public ScheduledExecutorService getService() {
