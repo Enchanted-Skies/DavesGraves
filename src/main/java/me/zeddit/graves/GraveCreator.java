@@ -4,6 +4,7 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import de.themoep.minedown.adventure.MineDown;
 import de.themoep.minedown.adventure.MineDownStringifier;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -36,19 +37,22 @@ public class GraveCreator {
     public void createGrave(Location loc, List<ItemStack> contents, Player owner) {
         if (loc.getY() <= 6) loc.setX(7.00);
         //needs to be made async.. at least in parts.
-        ArmorStand stand = loc.getWorld().spawn(loc, ArmorStand.class, (armorStand) -> {
+        loc.getWorld().spawn(loc, ArmorStand.class, (armorStand) -> {
             armorStand.setGravity(false);
             armorStand.setVisible(false);
             armorStand.setBasePlate(false);
             armorStand.setSmall(true);
             armorStand.setCanMove(false);
             Objects.requireNonNull(armorStand.getEquipment()).setHelmet(skull);
-            armorStand.customName(
-                    new MineDown(
-                            GravesMain.getInstance().getConfig()
-                            .getString("nameTagFormat"))
-                            .replaceFirst(true)
-                            .replace("name", new MineDownStringifier().stringify(owner.displayName())).toComponent());
+            armorStand.setCustomNameVisible(true);
+            final String stringName =GravesMain.getInstance().getConfig()
+                    .getString("nameTagFormat");
+            final String ownerStringified = new MineDownStringifier().stringify(owner.displayName());
+            final Component name =  new MineDown(
+                    stringName)
+                    .replaceFirst(true)
+                    .replace("name", ownerStringified).toComponent();
+            armorStand.customName(name);
             final PersistentDataContainer container = armorStand.getPersistentDataContainer();
             container.set(GraveKeys.GRAVE_OWNER.toKey(), PersistentDataType.STRING, owner.getUniqueId().toString());
             final List<byte[]> inventory = contents.stream().map(ItemStack::serializeAsBytes).collect(Collectors.toList());

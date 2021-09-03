@@ -1,4 +1,4 @@
-nameTagFormat: &4%name%'s loot
+nameTagFormat: "&4%name%'s loot"
 #leave -1 for no expiry.
 graveDuration: 10
 durationUnit: minutes
