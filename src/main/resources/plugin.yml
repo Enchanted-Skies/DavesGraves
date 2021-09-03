@@ -3,3 +3,8 @@ version: ${project.version}
 main: me.zeddit.graves.GravesMain
 api-version: 1.17
 authors: [ zeddit ]
+softdepend:
+  - CoreProtect
+commands:
+  graves:
+    description: Umbrella command for graves.

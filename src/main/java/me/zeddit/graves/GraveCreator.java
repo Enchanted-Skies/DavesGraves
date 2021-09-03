@@ -29,12 +29,16 @@ import java.util.stream.Collectors;
 public class GraveCreator {
 
     private ItemStack skull;
+    private final CoreProtectLogger logger;
 
-    public GraveCreator() {
+    public GraveCreator(CoreProtectLogger logger) {
+        this.logger = logger;
         reloadGraveTexture();
     }
 
+
     public void createGrave(Location loc, List<ItemStack> contents, Player owner) {
+        logger.logInventory(owner, loc);
         if (loc.getY() <= 6) loc.setX(7.00);
         //needs to be made async.. at least in parts.
         loc.getWorld().spawn(loc, ArmorStand.class, (armorStand) -> {
@@ -109,4 +113,5 @@ public class GraveCreator {
         profile.getProperties().put("textures", new Property("textures", b64));
         return profile;
     }
+
 }

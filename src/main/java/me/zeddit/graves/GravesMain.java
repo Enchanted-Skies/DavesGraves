@@ -8,6 +8,7 @@ import org.bukkit.event.world.WorldLoadEvent;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -20,13 +21,13 @@ public final class GravesMain extends JavaPlugin {
         return instance;
     }
 
-
     @Override
     public void onEnable() {
         instance = this;
         service.submit(() -> Thread.currentThread().setName("Graves Async IO Thread 1"));
         saveDefaultConfig();
-        final GraveCreator creator = new GraveCreator();
+        final CoreProtectLogger logger = new CoreProtectLogger();
+        final GraveCreator creator = new GraveCreator(logger);
         final DeathListener listener = new DeathListener(creator);
         getServer().getPluginManager().registerEvents(listener, this);
         getServer().getPluginManager().registerEvents(new Listener() {
@@ -48,6 +49,7 @@ public final class GravesMain extends JavaPlugin {
                         }).forEach(Entity::remove);
             }
         }, this);
+        Objects.requireNonNull(getCommand("graves")).setExecutor(new GraveCommand(creator));
     }
 
     @Override
