@@ -2,6 +2,7 @@ package me.zeddit.graves;
 
 import org.bukkit.Keyed;
 import org.bukkit.NamespacedKey;
+import org.jetbrains.annotations.NotNull;
 
 
 public enum GraveKeys implements Keyed {
@@ -19,7 +20,7 @@ public enum GraveKeys implements Keyed {
     }
 
     @Override
-    public NamespacedKey getKey() {
+    public @NotNull NamespacedKey getKey() {
         if (key == null) {
             key = new NamespacedKey(GravesMain.getInstance(), value);
         }

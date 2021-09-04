@@ -59,8 +59,6 @@ public final class GravesMain extends JavaPlugin {
             }
         }, this);
         Objects.requireNonNull(getCommand("graves")).setExecutor(new GraveCommand(creator));
-        final ItemStack stack = new ItemStack(Material.OAK_WOOD);
-        stack.getItemMeta().getPersistentDataContainer().has(Tag.OAK_LOGS.getKey(), PersistentDataType.STRING);
 
     }
 
