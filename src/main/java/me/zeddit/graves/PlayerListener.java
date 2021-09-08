@@ -2,6 +2,7 @@ package me.zeddit.graves;
 
 
 import de.themoep.minedown.adventure.MineDown;
+import me.zeddit.graves.serialisation.GraveSerialiser;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
@@ -25,10 +26,10 @@ import java.util.UUID;
 
 
 // Convert to a record my ass
-public class DeathListener implements Listener {
+public class PlayerListener implements Listener {
     private final GraveCreator creator;
 
-    public DeathListener(GraveCreator creator) {
+    public PlayerListener(GraveCreator creator) {
         this.creator = creator;
     }
 
@@ -73,9 +74,20 @@ public class DeathListener implements Listener {
 
     @EventHandler
     public void onDeath(PlayerDeathEvent e) {
+        final FileConfiguration config = GravesMain.getInstance().getConfig();
+        if (e.getDrops().isEmpty()) {
+            e.getEntity().sendMessage(new MineDown(config.getString("emptyInv")).toComponent());
+            return;
+        }
         final List<ItemStack> items = new ArrayList<>(e.getDrops());
         e.getDrops().clear();
+        e.getEntity().sendMessage(new MineDown(config.getString("deathMsg")).replaceFirst(true)
+                .replace("coords", formatLocation(e.getEntity().getLocation())).toComponent());
         creator.createGrave(e.getEntity().getLocation(), items, e.getEntity());
+    }
+
+    private String formatLocation(Location loc) {
+        return String.format("%s, %s, %s", Math.round(loc.getX()), Math.round(loc.getY()), Math.round(loc.getZ()));
     }
 
     @EventHandler
@@ -87,6 +99,10 @@ public class DeathListener implements Listener {
     }
 
     private List<ItemStack> unpackInventory(PersistentDataContainer container) throws IOException {
+        final byte[] newArr = container.getOrDefault(GraveKeys.INVENTORY.getKey(), PersistentDataType.BYTE_ARRAY, new byte[0]);
+        if (newArr.length != 0) {
+            return GraveSerialiser.deserialise(newArr);
+        }
         final int len = container.getOrDefault(GraveKeys.INVENTORY_SIZE.getKey(), PersistentDataType.INTEGER, -1);
         if (len < 0) {
             throw new IOException("Invalid length of inventory, or could not find the mapping at all.");

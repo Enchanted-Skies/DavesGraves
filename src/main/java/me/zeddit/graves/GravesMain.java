@@ -1,13 +1,10 @@
 package me.zeddit.graves;
 
-import org.bukkit.Material;
-import org.bukkit.Tag;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.world.WorldLoadEvent;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -31,7 +28,7 @@ public final class GravesMain extends JavaPlugin {
         saveDefaultConfig();
         final CoreProtectLogger logger = new CoreProtectLogger();
         final GraveCreator creator = new GraveCreator(logger);
-        final DeathListener listener = new DeathListener(creator);
+        final PlayerListener listener = new PlayerListener(creator);
         getServer().getPluginManager().registerEvents(listener, this);
         getServer().getPluginManager().registerEvents(new Listener() {
             @EventHandler
