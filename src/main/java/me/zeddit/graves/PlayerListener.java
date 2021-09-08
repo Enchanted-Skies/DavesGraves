@@ -1,6 +1,7 @@
 package me.zeddit.graves;
 
 
+import com.destroystokyo.paper.event.entity.EntityAddToWorldEvent;
 import de.themoep.minedown.adventure.MineDown;
 import me.zeddit.graves.serialisation.GraveSerialiser;
 import net.kyori.adventure.text.Component;
@@ -8,17 +9,22 @@ import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.ArmorStand;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerArmorStandManipulateEvent;
+import org.bukkit.event.player.PlayerChatEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
+import javax.naming.Name;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -96,6 +102,18 @@ public class PlayerListener implements Listener {
         if (!stand.getPersistentDataContainer().has(GraveKeys.GRAVE_OWNER.getKey(), PersistentDataType.STRING)) return;
         e.setCancelled(true);
         unpackGrave(stand, e.getPlayer());
+    }
+
+    @EventHandler
+    public void cleanUpOldGraves(EntityAddToWorldEvent e) {
+        final Entity entity =e.getEntity();
+        if (!(entity instanceof ArmorStand)) return;
+        if (entity.getPersistentDataContainer().has(new NamespacedKey("davesgraves", "grave"), PersistentDataType.STRING)) {
+            entity.remove();
+        }
+        if (entity.getPersistentDataContainer().has(new NamespacedKey("enchantedgraves", "grave"), PersistentDataType.STRING)) {
+            entity.remove();
+        }
     }
 
     private List<ItemStack> unpackInventory(PersistentDataContainer container) throws IOException {
