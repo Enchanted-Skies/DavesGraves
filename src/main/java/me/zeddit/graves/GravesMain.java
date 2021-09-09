@@ -11,6 +11,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.Objects;
+import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
@@ -27,9 +28,10 @@ public final class GravesMain extends JavaPlugin {
         instance = this;
         service.submit(() -> Thread.currentThread().setName("Graves Async IO Thread 1"));
         saveDefaultConfig();
+        final GraveLogger graveLogger = new GraveLogger(2000);
         final CoreProtectLogger logger = new CoreProtectLogger();
-        final GraveCreator creator = new GraveCreator(logger);
-        final PlayerListener listener = new PlayerListener(creator);
+        final GraveCreator creator = new GraveCreator(logger, graveLogger);
+        final PlayerListener listener = new PlayerListener(creator, graveLogger);
         getServer().getPluginManager().registerEvents(listener, this);
         getServer().getPluginManager().registerEvents(new Listener() {
             @EventHandler
@@ -48,14 +50,18 @@ public final class GravesMain extends JavaPlugin {
                             new BukkitRunnable() {
                                 @Override
                                 public void run() {
+                                    graveLogger.logExpiry(UUID.fromString(it.getPersistentDataContainer().getOrDefault(GraveKeys.GRAVE_OWNER.getKey(), PersistentDataType.STRING, "")));
                                     it.remove();
                                 }
                             }.runTaskLater(GravesMain.getInstance(), (exp - System.currentTimeMillis()) / 50);
                             return false;
-                        }).forEach(Entity::remove);
+                        }).forEach(it -> {
+                            graveLogger.logExpiry(UUID.fromString(it.getPersistentDataContainer().getOrDefault(GraveKeys.GRAVE_OWNER.getKey(), PersistentDataType.STRING, "")));
+                            it.remove();
+                        });
             }
         }, this);
-        Objects.requireNonNull(getCommand("graves")).setExecutor(new GraveCommand(creator));
+        Objects.requireNonNull(getCommand("graves")).setExecutor(new GraveCommand(creator, graveLogger));
 
     }
 

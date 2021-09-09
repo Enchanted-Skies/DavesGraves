@@ -51,13 +51,16 @@ public class GraveSerialiser {
                 if (i == bytes.length -1) {
                     break;
                 }
-                top = sum+1;
+                top = i + sum + 1;
                 sum = -1;
+                i++;
+                continue;
             }
             if (sum == -1) {
                 if (i == top) {
                     sum = 0;
                     inv.add(ItemStack.deserializeBytes(byteListToArr(currentStack)));
+                    currentStack.clear();
                     continue;
                 }
                 currentStack.add(bytes[i]);

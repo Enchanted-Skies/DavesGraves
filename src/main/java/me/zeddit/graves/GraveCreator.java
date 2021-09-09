@@ -4,6 +4,7 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import de.themoep.minedown.adventure.MineDown;
 import de.themoep.minedown.adventure.MineDownStringifier;
+import me.zeddit.graves.serialisation.GraveSerialiser;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -16,6 +17,7 @@ import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -31,8 +33,10 @@ public class GraveCreator {
 
     private ItemStack skull;
     private final CoreProtectLogger logger;
+    private final GraveLogger graveLogger;
 
-    public GraveCreator(CoreProtectLogger logger) {
+    public GraveCreator(CoreProtectLogger logger, GraveLogger graveLogger) {
+        this.graveLogger = graveLogger;
         this.logger = logger;
         reloadGraveTexture();
     }
@@ -62,11 +66,13 @@ public class GraveCreator {
             armorStand.customName(name);
             final PersistentDataContainer container = armorStand.getPersistentDataContainer();
             container.set(GraveKeys.GRAVE_OWNER.getKey(), PersistentDataType.STRING, owner.getUniqueId().toString());
-            final List<byte[]> inventory = contents.stream().map(ItemStack::serializeAsBytes).collect(Collectors.toList());
+            /*final List<byte[]> inventory = contents.stream().map(ItemStack::serializeAsBytes).collect(Collectors.toList());
             for (int i = 0; i < inventory.size(); i++) {
                 container.set(new NamespacedKey(GravesMain.getInstance(), String.valueOf(i)), PersistentDataType.BYTE_ARRAY, inventory.get(i));
             }
-            container.set(GraveKeys.INVENTORY_SIZE.getKey(), PersistentDataType.INTEGER, inventory.size());
+            container.set(GraveKeys.INVENTORY_SIZE.getKey(), PersistentDataType.INTEGER, inventory.size());*/
+            final byte[] inventory = new GraveSerialiser(contents).serialise();
+            container.set(GraveKeys.INVENTORY.getKey(), PersistentDataType.BYTE_ARRAY, inventory);
             final FileConfiguration config = GravesMain.getInstance().getConfig();
             final long duration = config.getLong("graveDuration");
             if (duration == -1) {
@@ -82,11 +88,14 @@ public class GraveCreator {
                     @Override
                     public void run() {
                         armorStand.remove();
+                        graveLogger.logExpiry(UUID.fromString(armorStand.getPersistentDataContainer().getOrDefault(GraveKeys.GRAVE_OWNER.getKey(), PersistentDataType.STRING, "")));
                     }
                 }.runTaskLater(GravesMain.getInstance(), durationConv / 50);
             }
+            graveLogger.logCreate(owner, loc, contents);
         });
     }
+
     public void reloadGraveTexture() {
         skull = getSkull( GravesMain.getInstance().getConfig().getString("graveTexture"));
     }
