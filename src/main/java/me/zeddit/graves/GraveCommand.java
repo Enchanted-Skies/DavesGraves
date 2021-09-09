@@ -16,9 +16,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class GraveCommand implements CommandExecutor {
 
     private final GraveCreator creator;
+    private final GraveLogger logger;
 
-    public GraveCommand(GraveCreator creator) {
+    public GraveCommand(GraveCreator creator, GraveLogger logger) {
         this.creator = creator;
+        this.logger = logger;
     }
 
     @Override
@@ -28,8 +30,10 @@ public class GraveCommand implements CommandExecutor {
         }
         if (args[0].equalsIgnoreCase("reload")) {
             reload(commandSender);
-        } else if (args[1].equalsIgnoreCase("clear")) {
+        } else if (args[0].equalsIgnoreCase("clear")) {
             clear(commandSender);
+        } else if (args[0].equalsIgnoreCase("savelog")) {
+            save(commandSender);
         }
         return true;
     }
@@ -58,6 +62,14 @@ public class GraveCommand implements CommandExecutor {
                 .forEach(it -> {it.remove(); count.getAndIncrement();});
         int countInt = count.get();
         sender.sendMessage(Component.text("Removed " + countInt + (countInt == 1 ? " grave" : " graves") + "!", NamedTextColor.GREEN));
+    }
+    private void save(CommandSender sender) {
+        if (!sender.hasPermission("graves.save")) {
+            sendNoPerms(sender);
+            return;
+        }
+        logger.queueFlush();
+        sender.sendMessage(Component.text("Queued a flush of the log buffer!", NamedTextColor.GREEN));
     }
     private void sendNoPerms(CommandSender sender) {
         sender.sendMessage(Component.text("You are not authenticated enough to perform this command!", NamedTextColor.RED));

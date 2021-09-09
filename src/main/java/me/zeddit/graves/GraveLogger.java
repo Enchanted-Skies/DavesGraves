@@ -1,5 +1,6 @@
 package me.zeddit.graves;
 
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -7,9 +8,9 @@ import org.bukkit.inventory.ItemStack;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.time.Instant;
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
+import java.text.SimpleDateFormat;
+import java.time.*;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.locks.ReentrantLock;
@@ -17,14 +18,20 @@ import java.util.concurrent.locks.ReentrantLock;
 public class GraveLogger {
 
     private final StringBuffer buffer;
-    private final File dataFile = new File(GravesMain.getInstance().getDataFolder(), "graves.log");
+    private File dataFile;
     private final ReentrantLock lock = new ReentrantLock();
     private final boolean enabled;
+    private static final PlainTextComponentSerializer serializer = PlainTextComponentSerializer.builder().build();
 
     public GraveLogger(int capacity) {
+        dataFile = new File(String.format("%s/logs/", GravesMain.getInstance().getDataFolder()));
         buffer = new StringBuffer(capacity);
         if (!dataFile.exists()) {
             try {
+                if (!dataFile.mkdirs()) {
+                    throw new IOException("Could not create dirs!");
+                }
+                dataFile = new File(dataFile, String.format("graves%s.log",dateToday()));
                 if (!dataFile.createNewFile()) {
                     throw new IOException("Could not create new graves.log file!");
                 }
@@ -34,7 +41,14 @@ public class GraveLogger {
                 return;
             }
         }
+        dataFile = new File(dataFile, String.format("graves%s.log",dateToday()));
         enabled = true;
+    }
+    private String dateToday() {
+        return new SimpleDateFormat("dd-MM-yy").format(Date.from(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant()));
+    }
+    public static String playerName(Player player) {
+        return serializer.serialize(player.displayName());
     }
 
     public void logRaw(String msg) {
@@ -49,16 +63,23 @@ public class GraveLogger {
     public void logCreate(Player creator, Location location, List<ItemStack> contents) {
         checkEnabled();
         final StringBuilder builder = baseLog();
-        builder.append(String.format("Grave Created by creator:%s (creatoruuid:%s) at %s with items %s", creator.displayName(), creator.getUniqueId(),formatLocation(location), formatItems(contents)));
+        builder.append(String.format("Grave Created by creator:%s (creatoruuid:%s) at %s with items %s", playerName(creator), creator.getUniqueId(),formatLocation(location), formatItems(contents)));
         final String log = builder.toString();
+        append(log);
     }
 
     public void logOpen(Player opener, Location location, UUID originalOwner, List<ItemStack> contents) {
         checkEnabled();
         final StringBuilder builder = baseLog();
-        builder.append(String.format("Grave owned by originalowneruuid:%s Opened by opener:%s (openeruuid:%s) at %s with items %s", originalOwner, opener.displayName(), opener.getUniqueId(), formatLocation(location), formatItems(contents)));
+        builder.append(String.format("Grave owned by originalowneruuid:%s Opened by opener:%s (openeruuid:%s) at %s with items %s", originalOwner, playerName(opener), opener.getUniqueId(), formatLocation(location), formatItems(contents)));
         final String log = builder.toString();
+        append(log);
+    }
 
+    public void logExpiry(UUID owner) {
+        checkEnabled();
+        final StringBuilder builder = baseLog();
+        append(builder.append(String.format("Grave owned by owneruuid:%s expired.", owner)).toString());
     }
 
     private void append(String log) {
@@ -91,17 +112,17 @@ public class GraveLogger {
         return String.format("location:%s, %s, %s", Math.round(loc.getX()), Math.round(loc.getY()), Math.round(loc.getZ()));
     }
 
-    private void queueFlush() {
+    public synchronized void queueFlush() {
         final String toFlush = buffer.toString();
+        if (toFlush.equals("")) return;
         buffer.setLength(0);
         GravesMain.getInstance().getService().submit(() -> {
-            try(final FileWriter writer = new FileWriter(dataFile)) {
+            try(final FileWriter writer = new FileWriter(dataFile, true)) {
                 lock.lock();
-                writer.append(toFlush);
+                writer.append(toFlush).append("\n");
             } catch (IOException e) {
                 e.printStackTrace();
-            }
-            finally {
+            } finally {
                 lock.unlock();
             }
         });

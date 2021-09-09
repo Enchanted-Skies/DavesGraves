@@ -16,27 +16,26 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
-import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerArmorStandManipulateEvent;
-import org.bukkit.event.player.PlayerChatEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
-import javax.naming.Name;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import static me.zeddit.graves.GraveLogger.playerName;
 
 
 // Convert to a record my ass
 public class PlayerListener implements Listener {
     private final GraveCreator creator;
+    private final GraveLogger logger;
 
-    public PlayerListener(GraveCreator creator) {
+    public PlayerListener(GraveCreator creator, GraveLogger logger) {
         this.creator = creator;
+        this.logger = logger;
     }
 
 
@@ -48,22 +47,26 @@ public class PlayerListener implements Listener {
         if (ownerIDStr == null) {
             stand.remove();
             manipulator.sendMessage(invalidGrave);
+            logger.logRaw(String.format("Could not open grave because the owner was null. opener:%s (openeruuid:%s)", playerName(manipulator), manipulator.getUniqueId()));
             return;
         }
         if (ownerLoot && !(UUID.fromString(ownerIDStr).equals(manipulator.getUniqueId()))) {
             manipulator.sendMessage(new MineDown(config.getString("doesNotOwnMessage")).toComponent());
+            logger.logRaw(String.format("Could not open grave because the person opening did not own the grave. opener:%s (openeruuid:%s) creatoruuid:%s", playerName(manipulator), manipulator.getUniqueId(), ownerIDStr));
             return;
         }
         final long expiry = stand.getPersistentDataContainer().getOrDefault(GraveKeys.EXPIRY.getKey(), PersistentDataType.LONG, -2L);
         if (expiry == -2) {
             stand.remove();
             manipulator.sendMessage(invalidGrave);
+            logger.logRaw(String.format("Could not open grave because there was no expiry value. opener:%s (openeruuid:%s) creatoruuid:%s", playerName(manipulator), manipulator.getUniqueId(), ownerIDStr));
             return;
         }
         if (expiry != -1) {
             if (System.currentTimeMillis() >= expiry) {
                 stand.remove();
                 manipulator.sendMessage(invalidGrave);
+                logger.logRaw(String.format("Could not open grave because it expired. opener:%s (openeruuid:%s) creatoruuid:%s", playerName(manipulator), manipulator.getUniqueId(), ownerIDStr));
                 return;
             }
         }
@@ -72,9 +75,11 @@ public class PlayerListener implements Listener {
             final Location itemLoc = stand.getLocation().clone();
             stand.remove();
             toDrop.forEach(it -> itemLoc.getWorld().dropItem(itemLoc, it));
+            logger.logOpen(manipulator, itemLoc, UUID.fromString(ownerIDStr), toDrop);
         } catch (IOException ex) {
             stand.remove();
             manipulator.sendMessage(invalidGrave);
+            logger.logRaw(String.format("Could not open grave because there was an error unpacking the inventory. opener:%s (openeruuid:%s) creatoruuid:%s", playerName(manipulator), manipulator.getUniqueId(), ownerIDStr));
         }
     }
 
