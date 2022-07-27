@@ -44,8 +44,8 @@ public class GraveCreator {
 
     public void createGrave(Location loc, List<ItemStack> contents, Player owner) {
         logger.logInventory(owner, loc);
-        if (loc.getY() <= 6) {
-            loc.setY(7.00);
+        if (loc.getY() <= loc.getWorld().getMinHeight() + 6) {
+            loc.setY(loc.getWorld().getMinHeight() + 7.00);
         }
         //needs to be made async.. at least in parts.
         loc.getWorld().spawn(loc, ArmorStand.class, (armorStand) -> {
