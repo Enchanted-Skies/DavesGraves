@@ -1,5 +1,6 @@
 package me.zeddit.graves;
 
+import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
 import org.bukkit.event.EventHandler;
@@ -60,7 +61,10 @@ public final class GravesMain extends JavaPlugin {
                         });
             }
         }, this);
-        Objects.requireNonNull(getCommand("graves")).setExecutor(new GraveCommand(creator, graveLogger));
+        final PluginCommand command = Objects.requireNonNull(getCommand("graves"));
+        final GraveCommand graveCommand = new GraveCommand(creator, graveLogger);
+        command.setExecutor(graveCommand);
+        command.setTabCompleter(graveCommand);
 
     }
 
