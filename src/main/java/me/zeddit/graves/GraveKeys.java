@@ -1,9 +1,10 @@
 package me.zeddit.graves;
 
+import org.bukkit.Keyed;
 import org.bukkit.NamespacedKey;
 
 
-public enum GraveKeys implements Keyable {
+public enum GraveKeys implements Keyed {
     GRAVE_OWNER("graveOwner"),
     EXPIRY("expiry"),
     INVENTORY_SIZE("invSize");
@@ -18,7 +19,7 @@ public enum GraveKeys implements Keyable {
     }
 
     @Override
-    public NamespacedKey toKey() {
+    public NamespacedKey getKey() {
         if (key == null) {
             key = new NamespacedKey(GravesMain.getInstance(), value);
         }
@@ -35,6 +36,3 @@ public enum GraveKeys implements Keyable {
     }
 }
 
-interface Keyable {
-    NamespacedKey toKey();
-}

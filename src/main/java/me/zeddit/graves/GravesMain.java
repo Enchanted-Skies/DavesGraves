@@ -1,18 +1,21 @@
 package me.zeddit.graves;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
+import org.bukkit.Tag;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.world.WorldLoadEvent;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 public final class GravesMain extends JavaPlugin {
     private static GravesMain instance;
@@ -37,7 +40,7 @@ public final class GravesMain extends JavaPlugin {
                 e.getWorld().getEntities().stream()
                         .filter(it -> it instanceof ArmorStand)
                         .filter(it -> {
-                            long exp = it.getPersistentDataContainer().getOrDefault(GraveKeys.EXPIRY.toKey(), PersistentDataType.LONG, -2L);
+                            long exp = it.getPersistentDataContainer().getOrDefault(GraveKeys.EXPIRY.getKey(), PersistentDataType.LONG, -2L);
                             if (exp == -1) {
                                 return false;
                             }
@@ -45,12 +48,20 @@ public final class GravesMain extends JavaPlugin {
                                 return true; // invalid so remove in foreach
                             }
                             //This means they need to be collected at their expiry time
-                            service.schedule(it::remove,exp - System.currentTimeMillis() , TimeUnit.MILLISECONDS);
+                            new BukkitRunnable() {
+                                @Override
+                                public void run() {
+                                    it.remove();
+                                }
+                            }.runTaskLater(GravesMain.getInstance(), (exp - System.currentTimeMillis()) / 50);
                             return false;
                         }).forEach(Entity::remove);
             }
         }, this);
         Objects.requireNonNull(getCommand("graves")).setExecutor(new GraveCommand(creator));
+        final ItemStack stack = new ItemStack(Material.OAK_WOOD);
+        stack.getItemMeta().getPersistentDataContainer().has(Tag.OAK_LOGS.getKey(), PersistentDataType.STRING);
+
     }
 
     @Override

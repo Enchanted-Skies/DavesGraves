@@ -36,7 +36,7 @@ public class DeathListener implements Listener {
     private void unpackGrave(ArmorStand stand, Player manipulator) {
         final FileConfiguration config =GravesMain.getInstance().getConfig();
         final boolean ownerLoot = config.getBoolean("onlyOwnersCanLoot");
-        final String ownerIDStr = stand.getPersistentDataContainer().get(GraveKeys.GRAVE_OWNER.toKey(), PersistentDataType.STRING);
+        final String ownerIDStr = stand.getPersistentDataContainer().get(GraveKeys.GRAVE_OWNER.getKey(), PersistentDataType.STRING);
         final Component invalidGrave = new MineDown(config.getString("invalidGrave")).toComponent();
         if (ownerIDStr == null) {
             stand.remove();
@@ -47,7 +47,7 @@ public class DeathListener implements Listener {
             manipulator.sendMessage(new MineDown(config.getString("doesNotOwnMessage")).toComponent());
             return;
         }
-        final long expiry = stand.getPersistentDataContainer().getOrDefault(GraveKeys.EXPIRY.toKey(), PersistentDataType.LONG, -2L);
+        final long expiry = stand.getPersistentDataContainer().getOrDefault(GraveKeys.EXPIRY.getKey(), PersistentDataType.LONG, -2L);
         if (expiry == -2) {
             stand.remove();
             manipulator.sendMessage(invalidGrave);
@@ -81,13 +81,13 @@ public class DeathListener implements Listener {
     @EventHandler
     public void onArmorStandInteract(PlayerArmorStandManipulateEvent e) {
         final ArmorStand stand = e.getRightClicked();
-        if (!stand.getPersistentDataContainer().has(GraveKeys.GRAVE_OWNER.toKey(), PersistentDataType.STRING)) return;
+        if (!stand.getPersistentDataContainer().has(GraveKeys.GRAVE_OWNER.getKey(), PersistentDataType.STRING)) return;
         e.setCancelled(true);
         unpackGrave(stand, e.getPlayer());
     }
 
     private List<ItemStack> unpackInventory(PersistentDataContainer container) throws IOException {
-        final int len = container.getOrDefault(GraveKeys.INVENTORY_SIZE.toKey(), PersistentDataType.INTEGER, -1);
+        final int len = container.getOrDefault(GraveKeys.INVENTORY_SIZE.getKey(), PersistentDataType.INTEGER, -1);
         if (len < 0) {
             throw new IOException("Invalid length of inventory, or could not find the mapping at all.");
         }
@@ -110,7 +110,7 @@ public class DeathListener implements Listener {
     @EventHandler
     public void externalGraveBreak(EntityDamageByEntityEvent e) {
         if ((e.getEntity() instanceof final ArmorStand stand) && e.getCause() == EntityDamageEvent.DamageCause.ENTITY_ATTACK && (e.getDamager() instanceof final Player player)) {
-            if (stand.getPersistentDataContainer().has(GraveKeys.GRAVE_OWNER.toKey(), PersistentDataType.STRING)) {
+            if (stand.getPersistentDataContainer().has(GraveKeys.GRAVE_OWNER.getKey(), PersistentDataType.STRING)) {
                 e.setCancelled(true);
                 unpackGrave(stand, player);
             }

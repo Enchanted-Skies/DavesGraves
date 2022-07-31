@@ -15,6 +15,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -58,24 +59,29 @@ public class GraveCreator {
                     .replace("name", ownerStringified).toComponent();
             armorStand.customName(name);
             final PersistentDataContainer container = armorStand.getPersistentDataContainer();
-            container.set(GraveKeys.GRAVE_OWNER.toKey(), PersistentDataType.STRING, owner.getUniqueId().toString());
+            container.set(GraveKeys.GRAVE_OWNER.getKey(), PersistentDataType.STRING, owner.getUniqueId().toString());
             final List<byte[]> inventory = contents.stream().map(ItemStack::serializeAsBytes).collect(Collectors.toList());
             for (int i = 0; i < inventory.size(); i++) {
                 container.set(new NamespacedKey(GravesMain.getInstance(), String.valueOf(i)), PersistentDataType.BYTE_ARRAY, inventory.get(i));
             }
-            container.set(GraveKeys.INVENTORY_SIZE.toKey(), PersistentDataType.INTEGER, inventory.size());
+            container.set(GraveKeys.INVENTORY_SIZE.getKey(), PersistentDataType.INTEGER, inventory.size());
             final FileConfiguration config = GravesMain.getInstance().getConfig();
             final long duration = config.getLong("graveDuration");
             if (duration == -1) {
-                container.set(GraveKeys.EXPIRY.toKey(), PersistentDataType.LONG, -1L);
+                container.set(GraveKeys.EXPIRY.getKey(), PersistentDataType.LONG, -1L);
             } else {
                 final TimeUnit unit = TimeUnit
                         .valueOf(Objects.requireNonNull(config
                                 .getString("durationUnit")).toUpperCase(Locale.ROOT));
                 final long durationConv = TimeUnit.MILLISECONDS.convert(duration, unit);
                 final long expiry = System.currentTimeMillis() + durationConv;
-                container.set(GraveKeys.EXPIRY.toKey(), PersistentDataType.LONG, expiry);
-                GravesMain.getInstance().getService().schedule(armorStand::remove, durationConv, TimeUnit.MILLISECONDS);
+                container.set(GraveKeys.EXPIRY.getKey(), PersistentDataType.LONG, expiry);
+                new BukkitRunnable() {
+                    @Override
+                    public void run() {
+                        armorStand.remove();
+                    }
+                }.runTaskLater(GravesMain.getInstance(), durationConv / 50);
             }
         });
     }
