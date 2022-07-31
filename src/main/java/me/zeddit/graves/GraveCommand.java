@@ -6,14 +6,20 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabExecutor;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.persistence.PersistentDataType;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 
-public class GraveCommand implements CommandExecutor {
+public class GraveCommand implements TabExecutor {
 
     private final GraveCreator creator;
     private final GraveLogger logger;
@@ -74,4 +80,11 @@ public class GraveCommand implements CommandExecutor {
     private void sendNoPerms(CommandSender sender) {
         sender.sendMessage(Component.text("You are not authenticated enough to perform this command!", NamedTextColor.RED));
     }
+
+    @Override
+    public @Nullable List<String> onTabComplete(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String s, @NotNull String[] args) {
+        if (args.length != 1) return null;
+        return Stream.of("clear","reload","savelog").filter( it -> it.toLowerCase(Locale.ROOT).startsWith(args[0].toLowerCase(Locale.ROOT))).collect(Collectors.toList());
+    }
+
 }
