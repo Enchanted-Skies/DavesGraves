@@ -2,9 +2,10 @@ name: Graves
 version: ${project.version}
 main: me.zeddit.graves.GravesMain
 api-version: 1.17
-authors: [ zeddit ]
+authors: ["Dav_e", "zeddit", "Xemor_"]
 softdepend:
   - CoreProtect
 commands:
   graves:
     description: Umbrella command for graves.
+    usage: /graves
