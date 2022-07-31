@@ -4,13 +4,13 @@ import org.bukkit.Keyed;
 import org.bukkit.NamespacedKey;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.concurrent.TimeUnit;
 
 
 public enum GraveKeys implements Keyed {
     GRAVE_OWNER("graveOwner"),
     EXPIRY("expiry"),
-    INVENTORY_SIZE("invSize");
+    INVENTORY_SIZE("invSize"),
+    INVENTORY("inv");
 
     private final String value;
     //This needs to be lazy initialised to avoid GravesMain.getInstance resolving to null.
