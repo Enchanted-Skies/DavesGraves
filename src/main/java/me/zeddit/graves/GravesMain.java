@@ -65,7 +65,6 @@ public final class GravesMain extends JavaPlugin {
         final GraveCommand graveCommand = new GraveCommand(creator, graveLogger);
         command.setExecutor(graveCommand);
         command.setTabCompleter(graveCommand);
-
     }
 
     @Override
