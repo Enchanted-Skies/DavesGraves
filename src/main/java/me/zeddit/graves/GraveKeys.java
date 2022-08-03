@@ -7,13 +7,13 @@ import org.jetbrains.annotations.NotNull;
 
 
 public enum GraveKeys implements Keyed {
+    //As uuid
     GRAVE_OWNER("graveOwner"),
     EXPIRY("expiry"),
     INVENTORY_SIZE("invSize"),
     INVENTORY("inv");
 
     private final String value;
-    //This needs to be lazy initialised to avoid GravesMain.getInstance resolving to null.
     private NamespacedKey key = null;
 
 
