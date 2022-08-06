@@ -2,13 +2,13 @@ package me.zeddit.graves;
 
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
+import com.mojang.datafixers.util.Pair;
 import de.themoep.minedown.adventure.MineDown;
 import de.themoep.minedown.adventure.MineDownStringifier;
 import me.zeddit.graves.serialisation.GraveSerialiser;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Player;
@@ -17,27 +17,23 @@ import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.scheduler.BukkitRunnable;
-import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.List;
-import java.util.Locale;
-import java.util.Objects;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
+import java.util.*;
 
 public class GraveCreator {
 
     private ItemStack skull;
     private final CoreProtectLogger logger;
     private final GraveLogger graveLogger;
+    private final List<Pair<UUID, Location>> expiredGraves;
 
-    public GraveCreator(CoreProtectLogger logger, GraveLogger graveLogger) {
+    public GraveCreator(CoreProtectLogger logger, GraveLogger graveLogger, List<Pair<UUID, Location>> expiredGraves) {
         this.graveLogger = graveLogger;
         this.logger = logger;
+        this.expiredGraves = expiredGraves;
         reloadGraveTexture();
     }
 
@@ -78,19 +74,25 @@ public class GraveCreator {
             if (duration == -1) {
                 container.set(GraveKeys.EXPIRY.getKey(), PersistentDataType.LONG, -1L);
             } else {
-                final TimeUnit unit = TimeUnit
-                        .valueOf(Objects.requireNonNull(config
-                                .getString("durationUnit")).toUpperCase(Locale.ROOT));
-                final long durationConv = TimeUnit.MILLISECONDS.convert(duration, unit);
+                final long durationConv = GravesMain.millisConvert(duration);
                 final long expiry = System.currentTimeMillis() + durationConv;
+                final GravesMain instance =GravesMain.getInstance();
                 container.set(GraveKeys.EXPIRY.getKey(), PersistentDataType.LONG, expiry);
                 new BukkitRunnable() {
                     @Override
                     public void run() {
                         armorStand.remove();
+                        final var pair =new Pair<>(owner.getUniqueId(), armorStand.getLocation());
+                        expiredGraves.add(pair);
+                        new BukkitRunnable() {
+                            @Override
+                            public void run() {
+                                expiredGraves.remove(pair);
+                            }
+                        }.runTaskLater(instance, GravesMain.millisConvert(instance.getConfig().getLong("expiredDuration")) / 50); // ms to tick
                         graveLogger.logExpiry(UUID.fromString(armorStand.getPersistentDataContainer().getOrDefault(GraveKeys.GRAVE_OWNER.getKey(), PersistentDataType.STRING, "")));
                     }
-                }.runTaskLater(GravesMain.getInstance(), durationConv / 50);
+                }.runTaskLater(GravesMain.getInstance(), durationConv / 50); // ms to tick
             }
             graveLogger.logCreate(owner, loc, contents);
         });
@@ -99,7 +101,7 @@ public class GraveCreator {
     public void reloadGraveTexture() {
         skull = getSkull( GravesMain.getInstance().getConfig().getString("graveTexture"));
     }
-    private ItemStack getSkull(String texture) {
+    public static ItemStack getSkull(String texture) {
         ItemStack skull = new ItemStack(Material.PLAYER_HEAD);
         SkullMeta skullMeta = (SkullMeta) skull.getItemMeta();
         try {
@@ -120,7 +122,7 @@ public class GraveCreator {
         skull.setItemMeta(skullMeta);
         return skull;
     }
-    private GameProfile makeProfile(String b64) {
+    private static GameProfile makeProfile(String b64) {
         // random uuid based on the b64 string
         UUID id = new UUID(
                 b64.substring(b64.length() - 20).hashCode(),

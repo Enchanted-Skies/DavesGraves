@@ -1,6 +1,8 @@
 package me.zeddit.graves;
 
+import com.mojang.datafixers.util.Pair;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.event.EventHandler;
@@ -10,10 +12,10 @@ import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public final class GravesMain extends JavaPlugin {
     private static GravesMain instance;
@@ -30,7 +32,9 @@ public final class GravesMain extends JavaPlugin {
         saveDefaultConfig();
         final GraveLogger graveLogger = new GraveLogger(2000);
         final CoreProtectLogger logger = new CoreProtectLogger();
-        final GraveCreator creator = new GraveCreator(logger, graveLogger);
+        final List<Pair<UUID, Location>> expiredGraves =new ArrayList<>(); // change to Collections.synchronizedList
+        // if concurrent modification exception traced back to this list
+        final GraveCreator creator = new GraveCreator(logger, graveLogger, expiredGraves);
         final PlayerListener listener = new PlayerListener(creator, graveLogger);
         getServer().getPluginManager().registerEvents(listener, this);
         getServer().getPluginManager().registerEvents(new Listener() {
@@ -62,7 +66,8 @@ public final class GravesMain extends JavaPlugin {
             }
         }, this);
         final PluginCommand command = Objects.requireNonNull(getCommand("graves"));
-        final GraveCommand graveCommand = new GraveCommand(creator, graveLogger);
+        final GraveCommand graveCommand = new GraveCommand(creator, graveLogger,expiredGraves);
+        this.getServer().getPluginManager().registerEvents(graveCommand, this);
         command.setExecutor(graveCommand);
         command.setTabCompleter(graveCommand);
     }
@@ -76,5 +81,12 @@ public final class GravesMain extends JavaPlugin {
 
     public ScheduledExecutorService getService() {
         return service;
+    }
+
+    public static long millisConvert(long duration) {
+        final TimeUnit unit = TimeUnit
+                .valueOf(Objects.requireNonNull(GravesMain.getInstance().getConfig()
+                        .getString("durationUnit")).toUpperCase(Locale.ROOT));
+        return TimeUnit.MILLISECONDS.convert(duration, unit);
     }
 }
