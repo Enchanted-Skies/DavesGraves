@@ -5,17 +5,17 @@ import com.destroystokyo.paper.event.entity.EntityAddToWorldEvent;
 import de.themoep.minedown.adventure.MineDown;
 import me.zeddit.graves.serialisation.GraveSerialiser;
 import net.kyori.adventure.text.Component;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.entity.*;
 import org.bukkit.event.player.PlayerArmorStandManipulateEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataContainer;
@@ -36,6 +36,10 @@ public class PlayerListener implements Listener {
     public PlayerListener(GraveCreator creator, GraveLogger logger) {
         this.creator = creator;
         this.logger = logger;
+        final GravesMain instance = GravesMain.getInstance();
+        if (instance.getConfig().getBoolean("fireImmunity")) {
+            instance.getServer().getPluginManager().registerEvents(new FireListener(key), instance);
+        }
     }
 
 
@@ -123,9 +127,18 @@ public class PlayerListener implements Listener {
 
     private List<ItemStack> unpackInventory(PersistentDataContainer container) throws IOException {
         final byte[] newArr = container.getOrDefault(GraveKeys.INVENTORY.getKey(), PersistentDataType.BYTE_ARRAY, new byte[0]);
+        List<ItemStack> inv;
         if (newArr.length != 0) {
-            return GraveSerialiser.deserialise(newArr);
+            inv =  GraveSerialiser.deserialise(newArr);
+        } else {
+            inv =  unpackInventoryOld(container);
         }
+        return applyFireImmunity(inv);
+    }
+
+    @Deprecated
+    private List<ItemStack> unpackInventoryOld(PersistentDataContainer container) throws IOException {
+        //Old serialisation format -- should be removed
         final int len = container.getOrDefault(GraveKeys.INVENTORY_SIZE.getKey(), PersistentDataType.INTEGER, -1);
         if (len < 0) {
             throw new IOException("Invalid length of inventory, or could not find the mapping at all.");
@@ -144,6 +157,37 @@ public class PlayerListener implements Listener {
             }
         }
         return itemStacks;
+    }
+
+    private final NamespacedKey key = new NamespacedKey(GravesMain.getInstance(), "fireImmunity");
+
+    private List<ItemStack> applyFireImmunity(List<ItemStack> inv) {
+        if (GravesMain.getInstance().getConfig().getBoolean("fireImmunity")) {
+            for (ItemStack it: inv) {
+                final var container = it.getItemMeta().getPersistentDataContainer(); // check for has rather than data
+                container.set(key, PersistentDataType.BYTE, (byte)0);
+            }
+        }
+        return inv;
+    }
+
+    private static class FireListener implements Listener {
+
+        private final NamespacedKey key;
+
+        private FireListener(NamespacedKey key) {
+            this.key = key;
+        }
+
+        @EventHandler
+        public void onItemBurn(EntityDamageEvent e) {
+            if (e.getEntity().getFireTicks() != 0) {
+                if (e.getEntity().getItemStack().getItemMeta().getPersistentDataContainer().has(key, PersistentDataType.BYTE)) {
+                    Bukkit.getLogger().info("Smd");
+                }
+                e.setCancelled(true);
+            }
+        }
     }
 
     @EventHandler

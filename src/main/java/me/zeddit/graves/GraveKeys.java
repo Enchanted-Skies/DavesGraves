@@ -10,8 +10,9 @@ public enum GraveKeys implements Keyed {
     //As uuid
     GRAVE_OWNER("graveOwner"),
     EXPIRY("expiry"),
-    INVENTORY_SIZE("invSize"),
-    INVENTORY("inv");
+    INVENTORY_SIZE("invSize"), // should be removed, redundant
+    INVENTORY("inv"),
+    GRAVE_ID("graveId");
 
     private final String value;
     private NamespacedKey key = null;

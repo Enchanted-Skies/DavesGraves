@@ -11,3 +11,5 @@ doesNotOwnMessage: "&cThis is not your loot!"
 invalidGrave: "&7The Grave rots before your eyes."
 emptyInv: "&7You died with no loot on you, therefore no grave was created."
 deathMsg: "&7A grave was created at your death point at &l%coords%&r&7."
+#toggle fire immunity until picked up when grave unpacked
+fireImmunity: true

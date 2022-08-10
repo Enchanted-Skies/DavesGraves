@@ -61,12 +61,13 @@ public class GraveCreator {
                     .replace("name", ownerStringified).toComponent();
             armorStand.customName(name);
             final PersistentDataContainer container = armorStand.getPersistentDataContainer();
+            container.set(GraveKeys.GRAVE_ID.getKey(), PersistentDataType.STRING, UUID.randomUUID().toString());
             container.set(GraveKeys.GRAVE_OWNER.getKey(), PersistentDataType.STRING, owner.getUniqueId().toString());
             /*final List<byte[]> inventory = contents.stream().map(ItemStack::serializeAsBytes).collect(Collectors.toList());
             for (int i = 0; i < inventory.size(); i++) {
                 container.set(new NamespacedKey(GravesMain.getInstance(), String.valueOf(i)), PersistentDataType.BYTE_ARRAY, inventory.get(i));
-            }
-            container.set(GraveKeys.INVENTORY_SIZE.getKey(), PersistentDataType.INTEGER, inventory.size());*/
+            }*/
+            container.set(GraveKeys.INVENTORY_SIZE.getKey(), PersistentDataType.INTEGER, contents.size()); // old format
             final byte[] inventory = new GraveSerialiser(contents).serialise();
             container.set(GraveKeys.INVENTORY.getKey(), PersistentDataType.BYTE_ARRAY, inventory);
             final FileConfiguration config = GravesMain.getInstance().getConfig();

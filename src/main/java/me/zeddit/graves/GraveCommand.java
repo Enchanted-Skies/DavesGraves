@@ -18,6 +18,7 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
@@ -36,7 +37,6 @@ public class GraveCommand implements TabExecutor, Listener {
 
     private final GraveCreator creator;
     private final GraveLogger logger;
-    private final ArrayList<Inventory> inventories = new ArrayList<>();
     private final List<Pair<UUID, Location>> expiredGraves;
 
     public GraveCommand(GraveCreator creator, GraveLogger logger, List<Pair<UUID, Location>> expiredGraves) {
@@ -68,6 +68,7 @@ public class GraveCommand implements TabExecutor, Listener {
             return;
         }
         final GravesMain main= GravesMain.getInstance();
+        main.getServer().getPluginManager().callEvent(new ConfigReloadEvent());
         main.reloadConfig();
         creator.reloadGraveTexture();
         sender.sendMessage(Component.text("Reloaded graves successfully!", NamedTextColor.GREEN));
@@ -100,6 +101,13 @@ public class GraveCommand implements TabExecutor, Listener {
         sender.sendMessage(Component.text("Queued a flush of the log buffer!", NamedTextColor.GREEN));
     }
 
+    private static record GraveHolder(Player p) implements InventoryHolder {
+        @Override
+        public @NotNull Inventory getInventory() {
+            return p.getInventory();
+        }
+    }
+
     private void display(Player player) {
         final List<ArmorStand> playerGraves = computeAllGraves()
         .filter(it -> Objects.equals(it.getPersistentDataContainer().get(GraveKeys.GRAVE_OWNER.getKey(), PersistentDataType.STRING), player.getUniqueId().toString()))
@@ -111,7 +119,7 @@ public class GraveCommand implements TabExecutor, Listener {
             player.sendMessage(Component.text("You have no active graves to display!").color(NamedTextColor.RED));
             return;
         }
-        final Inventory inv = Bukkit.createInventory(player, InventoryType.CHEST);
+        final Inventory inv = Bukkit.createInventory(new GraveHolder(player), InventoryType.CHEST);
         playerGraves.forEach(it -> {
             final Long exp = it.getPersistentDataContainer().get(GraveKeys.EXPIRY.getKey(), PersistentDataType.LONG);
             if (exp == null) {
@@ -120,7 +128,6 @@ public class GraveCommand implements TabExecutor, Listener {
             inv.addItem(formatGrave(exp,it.getLocation()));
         });
         expiredPlayerGraves.forEach(it -> inv.addItem(formatExpiredGrave(it.getSecond())));
-        inventories.add(inv);
         player.openInventory(inv);
     }
 
@@ -196,11 +203,11 @@ public class GraveCommand implements TabExecutor, Listener {
     //Listening
     @EventHandler
     public void onInventoryDrag(InventoryDragEvent e) {
-        if (inventories.contains(e.getInventory())) e.setCancelled(true);
+        if (e.getInventory().getHolder() instanceof GraveHolder) e.setCancelled(true);
     }
     @EventHandler
     public void onInventoryClick(InventoryClickEvent e) {
-        if (inventories.contains(e.getClickedInventory())) e.setCancelled(true);
+        if (e.getInventory().getHolder() instanceof GraveHolder) e.setCancelled(true);
     }
 
 }
