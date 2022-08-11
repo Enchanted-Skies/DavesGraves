@@ -12,6 +12,8 @@ import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.persistence.PersistentDataContainer;
@@ -23,7 +25,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
 
-public class GraveCreator {
+public class GraveCreator implements Listener {
 
     private ItemStack skull;
     private final CoreProtectLogger logger;
@@ -34,7 +36,7 @@ public class GraveCreator {
         this.graveLogger = graveLogger;
         this.logger = logger;
         this.expiredGraves = expiredGraves;
-        reloadGraveTexture();
+        onConfigReload(null);
     }
 
 
@@ -99,9 +101,11 @@ public class GraveCreator {
         });
     }
 
-    public void reloadGraveTexture() {
+    @EventHandler
+    public void onConfigReload(ConfigReloadEvent e) {
         skull = getSkull( GravesMain.getInstance().getConfig().getString("graveTexture"));
     }
+
     public static ItemStack getSkull(String texture) {
         ItemStack skull = new ItemStack(Material.PLAYER_HEAD);
         SkullMeta skullMeta = (SkullMeta) skull.getItemMeta();

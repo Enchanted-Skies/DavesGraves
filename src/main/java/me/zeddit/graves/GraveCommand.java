@@ -69,8 +69,6 @@ public class GraveCommand implements TabExecutor, Listener {
         }
         final GravesMain main= GravesMain.getInstance();
         main.getServer().getPluginManager().callEvent(new ConfigReloadEvent());
-        main.reloadConfig();
-        creator.reloadGraveTexture();
         sender.sendMessage(Component.text("Reloaded graves successfully!", NamedTextColor.GREEN));
     }
 

@@ -5,7 +5,6 @@ import com.destroystokyo.paper.event.entity.EntityAddToWorldEvent;
 import de.themoep.minedown.adventure.MineDown;
 import me.zeddit.graves.serialisation.GraveSerialiser;
 import net.kyori.adventure.text.Component;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -28,7 +27,6 @@ import java.util.UUID;
 import static me.zeddit.graves.GraveLogger.playerName;
 
 
-// Convert to a record my ass
 public class PlayerListener implements Listener {
     private final GraveCreator creator;
     private final GraveLogger logger;
@@ -36,10 +34,6 @@ public class PlayerListener implements Listener {
     public PlayerListener(GraveCreator creator, GraveLogger logger) {
         this.creator = creator;
         this.logger = logger;
-        final GravesMain instance = GravesMain.getInstance();
-        if (instance.getConfig().getBoolean("fireImmunity")) {
-            instance.getServer().getPluginManager().registerEvents(new FireListener(key), instance);
-        }
     }
 
 
@@ -78,7 +72,8 @@ public class PlayerListener implements Listener {
             final List<ItemStack> toDrop = unpackInventory(stand.getPersistentDataContainer());
             final Location itemLoc = stand.getLocation().clone();
             stand.remove();
-            toDrop.forEach(it -> itemLoc.getWorld().dropItem(itemLoc, it));
+            final boolean b = GravesMain.getInstance().getConfig().getBoolean("fireImmunity");
+            toDrop.forEach(it -> applyFireImmunity(itemLoc.getWorld().dropItem(itemLoc, it),b));
             logger.logOpen(manipulator, itemLoc, UUID.fromString(ownerIDStr), toDrop);
         } catch (IOException ex) {
             stand.remove();
@@ -133,7 +128,7 @@ public class PlayerListener implements Listener {
         } else {
             inv =  unpackInventoryOld(container);
         }
-        return applyFireImmunity(inv);
+        return inv;
     }
 
     @Deprecated
@@ -159,34 +154,9 @@ public class PlayerListener implements Listener {
         return itemStacks;
     }
 
-    private final NamespacedKey key = new NamespacedKey(GravesMain.getInstance(), "fireImmunity");
-
-    private List<ItemStack> applyFireImmunity(List<ItemStack> inv) {
-        if (GravesMain.getInstance().getConfig().getBoolean("fireImmunity")) {
-            for (ItemStack it: inv) {
-                final var container = it.getItemMeta().getPersistentDataContainer(); // check for has rather than data
-                container.set(key, PersistentDataType.BYTE, (byte)0);
-            }
-        }
-        return inv;
-    }
-
-    private static class FireListener implements Listener {
-
-        private final NamespacedKey key;
-
-        private FireListener(NamespacedKey key) {
-            this.key = key;
-        }
-
-        @EventHandler
-        public void onItemBurn(EntityDamageEvent e) {
-            if (e.getEntity().getFireTicks() != 0) {
-                if (e.getEntity().getItemStack().getItemMeta().getPersistentDataContainer().has(key, PersistentDataType.BYTE)) {
-                    Bukkit.getLogger().info("Smd");
-                }
-                e.setCancelled(true);
-            }
+    private void applyFireImmunity(Item it, boolean fireImmunity) {
+        if (fireImmunity) {
+            it.setInvulnerable(true);
         }
     }
 
@@ -199,4 +169,5 @@ public class PlayerListener implements Listener {
             }
         }
     }
+
 }

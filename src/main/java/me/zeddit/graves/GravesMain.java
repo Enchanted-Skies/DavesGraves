@@ -37,6 +37,7 @@ public final class GravesMain extends JavaPlugin {
         final GraveCreator creator = new GraveCreator(logger, graveLogger, expiredGraves);
         final PlayerListener listener = new PlayerListener(creator, graveLogger);
         getServer().getPluginManager().registerEvents(listener, this);
+        getServer().getPluginManager().registerEvents(creator,this);
         getServer().getPluginManager().registerEvents(new Listener() {
             @EventHandler
             public void onWorldLoad(WorldLoadEvent e) {
@@ -68,6 +69,12 @@ public final class GravesMain extends JavaPlugin {
         final PluginCommand command = Objects.requireNonNull(getCommand("graves"));
         final GraveCommand graveCommand = new GraveCommand(creator, graveLogger,expiredGraves);
         this.getServer().getPluginManager().registerEvents(graveCommand, this);
+        getServer().getPluginManager().registerEvents(new Listener() {
+            @EventHandler
+            public void onConfigReload(ConfigReloadEvent e) {
+                instance.reloadConfig();
+            }
+        }, this);
         command.setExecutor(graveCommand);
         command.setTabCompleter(graveCommand);
     }
