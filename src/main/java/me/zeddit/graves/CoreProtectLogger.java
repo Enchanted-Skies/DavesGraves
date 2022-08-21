@@ -2,6 +2,7 @@ package me.zeddit.graves;
 
 import net.coreprotect.CoreProtect;
 import net.coreprotect.CoreProtectAPI;
+import org.apache.logging.log4j.core.Core;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -12,10 +13,13 @@ import static org.bukkit.Bukkit.getServer;
 
 public class CoreProtectLogger {
 
+
+    private static CoreProtectLogger instance;
+
     private final boolean isEnabled;
     private CoreProtectAPI api;
 
-    public CoreProtectLogger() {
+    private CoreProtectLogger() {
         Plugin plugin = getServer().getPluginManager().getPlugin("CoreProtect");
         if (!(plugin instanceof CoreProtect)) {
             isEnabled =false;
@@ -37,6 +41,13 @@ public class CoreProtectLogger {
         isEnabled = true;
         api.testAPI();
         Bukkit.getLogger().info("Loaded CoreProtectAPI successfully!");
+    }
+
+    public static CoreProtectLogger getInstance() {
+        if (instance == null) {
+            instance = new CoreProtectLogger();
+        }
+        return instance;
     }
 
     private void logFailure() {

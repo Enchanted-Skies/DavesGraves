@@ -17,13 +17,24 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class GraveLogger {
 
+    private static GraveLogger instance;
+
     private final StringBuffer buffer;
     private File dataFile;
     private final ReentrantLock lock = new ReentrantLock();
     private final boolean enabled;
     private static final PlainTextComponentSerializer serializer = PlainTextComponentSerializer.builder().build();
 
-    public GraveLogger(int capacity) {
+    public synchronized static GraveLogger getInstance() {
+        return instance;
+    }
+
+    public synchronized static GraveLogger init(int capacity) {
+        instance = new GraveLogger(capacity);
+        return instance;
+    }
+
+    private GraveLogger(int capacity) {
         dataFile = new File(String.format("%s/logs/", GravesMain.getInstance().getDataFolder()));
         buffer = new StringBuffer(capacity);
         if (!dataFile.exists()) {
@@ -44,6 +55,7 @@ public class GraveLogger {
         dataFile = new File(dataFile, String.format("graves%s.log",dateToday()));
         enabled = true;
     }
+
     private String dateToday() {
         return new SimpleDateFormat("dd-MM-yy").format(Date.from(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant()));
     }

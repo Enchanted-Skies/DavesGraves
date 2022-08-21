@@ -48,11 +48,6 @@ public class PlayerListener implements Listener {
             logger.logRaw(String.format("Could not open grave because the owner was null. opener:%s (openeruuid:%s)", playerName(manipulator), manipulator.getUniqueId()));
             return;
         }
-        if (ownerLoot && !(UUID.fromString(ownerIDStr).equals(manipulator.getUniqueId()))) {
-            manipulator.sendMessage(new MineDown(config.getString("doesNotOwnMessage")).toComponent());
-            logger.logRaw(String.format("Could not open grave because the person opening did not own the grave. opener:%s (openeruuid:%s) creatoruuid:%s", playerName(manipulator), manipulator.getUniqueId(), ownerIDStr));
-            return;
-        }
         final long expiry = stand.getPersistentDataContainer().getOrDefault(GraveKeys.EXPIRY.getKey(), PersistentDataType.LONG, -2L);
         if (expiry == -2) {
             stand.remove();
@@ -68,6 +63,11 @@ public class PlayerListener implements Listener {
                 return;
             }
         }
+        if (ownerLoot && !(UUID.fromString(ownerIDStr).equals(manipulator.getUniqueId()))) {
+            manipulator.sendMessage(new MineDown(config.getString("doesNotOwnMessage")).toComponent());
+            logger.logRaw(String.format("Could not open grave because the person opening did not own the grave. opener:%s (openeruuid:%s) creatoruuid:%s", playerName(manipulator), manipulator.getUniqueId(), ownerIDStr));
+            return;
+        }
         try {
             final List<ItemStack> toDrop = unpackInventory(stand.getPersistentDataContainer());
             final Location itemLoc = stand.getLocation().clone();
@@ -80,6 +80,7 @@ public class PlayerListener implements Listener {
             manipulator.sendMessage(invalidGrave);
             logger.logRaw(String.format("Could not open grave because there was an error unpacking the inventory. opener:%s (openeruuid:%s) creatoruuid:%s", playerName(manipulator), manipulator.getUniqueId(), ownerIDStr));
         }
+        Grave.getActiveGraves().remove(stand);
     }
 
     @EventHandler
@@ -106,18 +107,6 @@ public class PlayerListener implements Listener {
         if (!stand.getPersistentDataContainer().has(GraveKeys.GRAVE_OWNER.getKey(), PersistentDataType.STRING)) return;
         e.setCancelled(true);
         unpackGrave(stand, e.getPlayer());
-    }
-
-    @EventHandler
-    public void cleanUpOldGraves(EntityAddToWorldEvent e) {
-        final Entity entity =e.getEntity();
-        if (!(entity instanceof ArmorStand)) return;
-        if (entity.getPersistentDataContainer().has(new NamespacedKey("davesgraves", "grave"), PersistentDataType.STRING)) {
-            entity.remove();
-        }
-        if (entity.getPersistentDataContainer().has(new NamespacedKey("enchantedgraves", "grave"), PersistentDataType.STRING)) {
-            entity.remove();
-        }
     }
 
     private List<ItemStack> unpackInventory(PersistentDataContainer container) throws IOException {

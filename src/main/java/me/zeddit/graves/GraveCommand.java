@@ -37,12 +37,10 @@ public class GraveCommand implements TabExecutor, Listener {
 
     private final GraveCreator creator;
     private final GraveLogger logger;
-    private final List<Pair<UUID, Location>> expiredGraves;
 
-    public GraveCommand(GraveCreator creator, GraveLogger logger, List<Pair<UUID, Location>> expiredGraves) {
+    public GraveCommand(GraveCreator creator, GraveLogger logger) {
         this.creator = creator;
         this.logger = logger;
-        this.expiredGraves = expiredGraves;
     }
 
     @Override
@@ -110,7 +108,7 @@ public class GraveCommand implements TabExecutor, Listener {
         final List<ArmorStand> playerGraves = computeAllGraves()
         .filter(it -> Objects.equals(it.getPersistentDataContainer().get(GraveKeys.GRAVE_OWNER.getKey(), PersistentDataType.STRING), player.getUniqueId().toString()))
         .collect(Collectors.toList());
-        final var expiredPlayerGraves = expiredGraves
+        final var expiredPlayerGraves = Grave.getExpiredGraves()
                 .stream()
                 .filter(it -> it.getFirst().equals(player.getUniqueId())).collect(Collectors.toList());
         if (playerGraves.isEmpty() && expiredPlayerGraves.isEmpty()) {
