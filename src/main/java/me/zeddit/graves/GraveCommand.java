@@ -48,13 +48,14 @@ public class GraveCommand implements TabExecutor, Listener {
         if (args.length == 0) {
             return true;
         }
+        final boolean isDisplay = (args[0].equalsIgnoreCase("display"))||(args[0].equalsIgnoreCase("list"));
         if (args[0].equalsIgnoreCase("reload")) {
             reload(commandSender);
         } else if (args[0].equalsIgnoreCase("clear")) {
             clear(commandSender);
         } else if (args[0].equalsIgnoreCase("savelog")) {
             save(commandSender);
-        } else if (args[0].equalsIgnoreCase("display") && commandSender instanceof Player player) {
+        } else if (isDisplay && commandSender instanceof Player player) {
             display(player);
         }
         return true;

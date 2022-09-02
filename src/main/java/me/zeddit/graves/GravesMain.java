@@ -2,6 +2,7 @@ package me.zeddit.graves;
 
 import com.destroystokyo.paper.event.entity.EntityAddToWorldEvent;
 import com.mojang.datafixers.util.Pair;
+import net.kyori.adventure.util.TriState;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
@@ -42,23 +43,33 @@ public final class GravesMain extends JavaPlugin {
                 Stream.of(e.getEntity())
                         .filter(it -> it instanceof ArmorStand)
                         .map(it -> (ArmorStand) it)
-                        .filter(it -> {
+                        .map(it -> {
                             long exp = it.getPersistentDataContainer().getOrDefault(GraveKeys.EXPIRY.getKey(), PersistentDataType.LONG, -2L);
                             if (exp == -1) {
-                                return false;
+                                return new Pair<>(1, it);
                             }
-                            if (exp == -2 || System.currentTimeMillis() >= exp) {
-                                return true; // invalid so remove in foreach
+                            if (System.currentTimeMillis() >= exp) {
+                                return new Pair<>(-1,it); // should be removed
                             }
-                            if (isLegacyGrave(it)) return true;
+                            if (isLegacyGrave(it)) return new Pair<>(0,it);
                             //This means they need to be collected at their expiry time
-                            if (!Grave.getActiveGraves().contains(it)) {
+                            if (!Grave.getActiveGraves().contains(it) && exp != -2) {
                                 new Grave(it);
                             }
-                            return false;
+                            return new Pair<>(1,it);
                         }).forEach(it -> {
-                            graveLogger.logExpiry(UUID.fromString(it.getPersistentDataContainer().getOrDefault(GraveKeys.GRAVE_OWNER.getKey(), PersistentDataType.STRING, "")));
-                            it.remove();
+                            if (it.getFirst() == 1) return;
+                            it.getSecond().remove();
+                            if (it.getFirst() == 0) {
+                                graveLogger.logRaw("Removed a legacy grave!");
+                            } else {
+                                final String owner = it.getSecond().getPersistentDataContainer().get(GraveKeys.GRAVE_OWNER.getKey(), PersistentDataType.STRING);
+                                if (owner == null) {
+                                    graveLogger.logRaw("Removed grave with unknown owner!");
+                                } else {
+                                    graveLogger.logExpiry(UUID.fromString(owner));
+                                }
+                            }
                         });
             }
         }, this);
