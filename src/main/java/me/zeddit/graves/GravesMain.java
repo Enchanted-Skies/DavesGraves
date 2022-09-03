@@ -44,7 +44,7 @@ public final class GravesMain extends JavaPlugin {
                         .filter(it -> it instanceof ArmorStand)
                         .map(it -> (ArmorStand) it)
                         .map(it -> {
-                            long exp = it.getPersistentDataContainer().getOrDefault(GraveKeys.EXPIRY.getKey(), PersistentDataType.LONG, -2L);
+                            long exp = it.getPersistentDataContainer().getOrDefault(GraveKeys.EXPIRY.getKey(), PersistentDataType.LONG, Long.MAX_VALUE);
                             if (exp == -1) {
                                 return new Pair<>(1, it);
                             }
@@ -53,7 +53,7 @@ public final class GravesMain extends JavaPlugin {
                             }
                             if (isLegacyGrave(it)) return new Pair<>(0,it);
                             //This means they need to be collected at their expiry time
-                            if (!Grave.getActiveGraves().contains(it) && exp != -2) {
+                            if (!Grave.getActiveGraves().contains(it) && exp != Long.MAX_VALUE) {
                                 new Grave(it);
                             }
                             return new Pair<>(1,it);
