@@ -93,8 +93,7 @@ public class PlayerListener implements Listener {
         final List<ItemStack> items = new ArrayList<>(e.getDrops());
         e.getDrops().clear();
         e.getEntity().sendMessage(new MineDown(config.getString("deathMsg")).replaceFirst(true)
-                .replace("coords", formatLocation(e.getEntity().getLocation())).toComponent());
-        creator.createGrave(e.getEntity().getLocation(), items, e.getEntity());
+                .replace("coords", formatLocation(creator.createGrave(e.getEntity().getLocation(), items, e.getEntity()))).toComponent());
     }
 
     private String formatLocation(Location loc) {

@@ -25,12 +25,12 @@ public class GraveCreator implements Listener {
     }
 
 
-    public void createGrave(Location loc, List<ItemStack> contents, Player owner) {
+    public Location createGrave(Location loc, List<ItemStack> contents, Player owner) {
         final FileConfiguration config = GravesMain.getInstance().getConfig();
         final long duration = config.getLong("graveDuration");
         final long expiry = duration == -1 ? -1 : GravesMain.millisConvert(duration) + System.currentTimeMillis();
         final Grave grave = new Grave(owner.getUniqueId(), UUID.randomUUID(), expiry, contents);
-        grave.spawn(loc, skull, owner);
+        return grave.spawn(loc, skull, owner).getLocation();
     }
 
     @EventHandler
